@@ -20,45 +20,23 @@ router.get('/', (req, res) => {
 // Create Site
 router.post('/', (req, res) => {
 
-    const twiml = new MessagingResponse();
-    const input = req.body.Body
-
-    twiml.message(`Is a string: ${input}`);
-
-    // if (req.body.Body == 'hello') {
-    //     twiml.message('Hi!');
-    // } else if (req.body.Body == 'bye') {
-    //     twiml.message('Goodbye');
-    // } else {
-    //     const input = req.body.Body
-    //     if (typeof input === 'string')
-    //         twiml.message(`Is a string: ${input}`); /// IT"S THIS ONE!!
-    //     else
-    //         twiml.message(JSON.stringify(input));
-    // }
-
-    res.writeHead(200, { 'Content-Type': 'text/xml' });
-    res.end(twiml.toString());
-
+    // THIS WORKS! ==/
     // const twiml = new MessagingResponse();
-
-    // console.log('req', req)
-
-    // twiml.message('The Robots are coming! Head for the hills!');
-
+    // const input = req.body.Body
+    // twiml.message(`Is a string: ${input}`);
     // res.writeHead(200, { 'Content-Type': 'text/xml' });
     // res.end(twiml.toString());
 
 
-    // try {
-    //     const newSite = siteService.createSite(req.body)
-    //     res.status(200).json({
-    //         message: `Create site, ya'll.`,
-    //         newSite
-    //     })
-    // } catch (error) {
-    //     res.status(error.status || 500).json(error)
-    // }
+    try {
+        const newSite = siteService.createSite(req.body)
+        res.status(200).json({
+            message: `Create site, ya'll.`,
+            newSite
+        })
+    } catch (error) {
+        res.status(error.status || 500).json(error)
+    }
 })
 
 // Read Site
