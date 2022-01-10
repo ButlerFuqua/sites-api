@@ -27,9 +27,11 @@ router.post('/', (req, res) => {
     } else if (req.body.Body == 'bye') {
         twiml.message('Goodbye');
     } else {
-        twiml.message(
-            'No Body param match, Twilio sends this in the request to your server.'
-        );
+        const input = req.body.Body
+        if (typeof input === 'string')
+            twiml.message(input);
+        else
+            twiml.message(JSON.stringify(input));
     }
 
     res.writeHead(200, { 'Content-Type': 'text/xml' });
