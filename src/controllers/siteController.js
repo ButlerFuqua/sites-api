@@ -1,7 +1,7 @@
 const express = require('express')
 const SiteService = require('../services/siteService')
 const router = express.Router()
-// const MessagingResponse = require('twilio').twiml.MessagingResponse;
+const MessagingResponse = require('twilio').twiml.MessagingResponse;
 
 const siteService = new SiteService()
 
@@ -22,10 +22,15 @@ router.post('/', (req, res) => {
 
     const twiml = new MessagingResponse();
 
-    twiml.message(`Your Message:\n${req.body.Body}`);
+    twiml.message('The Robots are coming! Head for the hills!');
 
-    res.writeHead(200, { 'Content-Type': 'text/xml' });
-    res.end(twiml.toString());
+    res.json({
+        twiml,
+        body: req.body,
+    })
+
+    // res.writeHead(200, { 'Content-Type': 'text/xml' });
+    // res.end(twiml.toString());
 
 
     // try {
