@@ -22,7 +22,7 @@ router.post('/', (req, res) => {
 
     const twiml = new MessagingResponse();
 
-    twiml.message(`Your Message:\n${req.body}`);
+    twiml.message(`Your Message:\n${req.body.Body}`);
 
     res.writeHead(200, { 'Content-Type': 'text/xml' });
     res.end(twiml.toString());
