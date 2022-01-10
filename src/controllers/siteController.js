@@ -1,7 +1,7 @@
 const express = require('express')
 const SiteService = require('../services/siteService')
 const router = express.Router()
-const MessagingResponse = require('twilio').twiml.MessagingResponse;
+// const MessagingResponse = require('twilio').twiml.MessagingResponse;
 
 const siteService = new SiteService()
 
@@ -20,23 +20,23 @@ router.get('/', (req, res) => {
 // Create Site
 router.post('/', (req, res) => {
 
-    const twiml = new MessagingResponse();
+    // const twiml = new MessagingResponse();
 
-    twiml.message('The Robots are coming! Head for the hills!');
+    // twiml.message('The Robots are coming! Head for the hills!');
 
-    res.writeHead(200, { 'Content-Type': 'text/xml' });
-    res.end(twiml.toString());
+    // res.writeHead(200, { 'Content-Type': 'text/xml' });
+    // res.end(twiml.toString());
 
 
-    // try {
-    //     const newSite = siteService.createSite(req.body)
-    //     res.status(200).json({
-    //         message: `Create site, ya'll.`,
-    //         newSite
-    //     })
-    // } catch (error) {
-    //     res.status(error.status || 500).json(error)
-    // }
+    try {
+        const newSite = siteService.createSite(req.body)
+        res.status(200).json({
+            message: `Create site, ya'll.`,
+            newSite
+        })
+    } catch (error) {
+        res.status(error.status || 500).json(error)
+    }
 })
 
 // Read Site
