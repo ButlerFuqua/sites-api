@@ -14,8 +14,21 @@ module.exports = class SiteService {
     }
 
     createSite(data) {
+        // Check that required data is there
         if (!data.phoneNumber)
             throw new Error(`Missing phone number: ${JSON.stringify(data)}`)
+
+        // Clean/validate required data
+
+        // Create new site in db
+
+        // Success, send success message with link to site
+
+        // Failure message, send failure message
+
+        // return success or true with twiml object
+
+
         return db.create(this.returnCleanedSiteObjectData(data))
     }
 

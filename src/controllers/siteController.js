@@ -1,12 +1,8 @@
 const express = require('express')
 const SiteService = require('../services/siteService')
 const router = express.Router()
-const MessagingResponse = require('twilio').twiml.MessagingResponse;
 
 const siteService = new SiteService()
-
-
-
 
 // Index ==/
 router.get('/', (req, res) => {
@@ -20,13 +16,13 @@ router.get('/', (req, res) => {
 // Create Site
 router.post('/', (req, res) => {
 
-    // THIS WORKS! ==/
-    // const twiml = new MessagingResponse();
-    // const input = req.body.Body
-    // twiml.message(`Is a string: ${input}`);
-    // res.writeHead(200, { 'Content-Type': 'text/xml' });
-    // res.end(twiml.toString());
+    // Send body/input to service
 
+    // Receive twiml object
+
+    // Return to client
+    //   res.writeHead(200, { 'Content-Type': 'text/xml' });
+    //   res.end(twiml.toString());
 
     try {
         const newSite = siteService.createSite(req.body)
