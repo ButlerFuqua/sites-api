@@ -29,7 +29,7 @@ router.post('/', (req, res) => {
     } else {
         const input = req.body.Body
         if (typeof input === 'string')
-            twiml.message(input);
+            twiml.message(`Is a string: ${input}`);
         else
             twiml.message(JSON.stringify(input));
     }
