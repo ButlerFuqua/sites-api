@@ -21,18 +21,21 @@ router.get('/', (req, res) => {
 router.post('/', (req, res) => {
 
     const twiml = new MessagingResponse();
+    const input = req.body.Body
 
-    if (req.body.Body == 'hello') {
-        twiml.message('Hi!');
-    } else if (req.body.Body == 'bye') {
-        twiml.message('Goodbye');
-    } else {
-        const input = req.body.Body
-        if (typeof input === 'string')
-            twiml.message(`Is a string: ${input}`);
-        else
-            twiml.message(JSON.stringify(input));
-    }
+    twiml.message(`Is a string: ${input}`);
+
+    // if (req.body.Body == 'hello') {
+    //     twiml.message('Hi!');
+    // } else if (req.body.Body == 'bye') {
+    //     twiml.message('Goodbye');
+    // } else {
+    //     const input = req.body.Body
+    //     if (typeof input === 'string')
+    //         twiml.message(`Is a string: ${input}`); /// IT"S THIS ONE!!
+    //     else
+    //         twiml.message(JSON.stringify(input));
+    // }
 
     res.writeHead(200, { 'Content-Type': 'text/xml' });
     res.end(twiml.toString());
