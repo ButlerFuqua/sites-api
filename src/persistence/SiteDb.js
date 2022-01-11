@@ -8,7 +8,7 @@ module.exports = class SiteDb {
 
     async init() {
 
-        const DB = process.env?.DB
+        const DB = process.env?.DB_CONNECT
 
         if (DB) { // Connect to actual database
             async (DB) => {

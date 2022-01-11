@@ -10,13 +10,16 @@ module.exports = class SmsClient {
         }
     }
 
-    // THIS WORKS! ==/
-    // https://www.twilio.com/docs/sms/tutorials/how-to-receive-and-reply-node-js#:~:text=const%20twiml%20%3D%20new,end(twiml.toString())%3B
-    // const twiml = new MessagingResponse();
-    // const input = req.body.Body
-    // twiml.message(`Is a string: ${input}`);
-    // res.writeHead(200, { 'Content-Type': 'text/xml' });
-    // res.end(twiml.toString());
+    sendMessage(message) {
+        // THIS WORKS! ==/
+        // https://www.twilio.com/docs/sms/tutorials/how-to-receive-and-reply-node-js#:~:text=const%20twiml%20%3D%20new,end(twiml.toString())%3B
+        const twiml = new MessagingResponse();
+        twiml.message(message);
+        return twiml
+        // res.writeHead(200, { 'Content-Type': 'text/xml' });
+        // res.end(twiml.toString());
+
+    }
 
 }
 

@@ -4,66 +4,20 @@ const router = express.Router()
 
 const siteService = new SiteService()
 
-// Index ==/
-router.get('/', (req, res) => {
-    const sites = siteService.getSites()
-    res.status(200).json({
-        message: `Get all sites, ya'll.`,
-        sites
-    })
-})
 
-// Create Site
-router.post('/', (req, res) => {
-
-    // Send body/input to service
-
-    // Receive twiml object
-
-    // Return to client
-    //   res.writeHead(200, { 'Content-Type': 'text/xml' });
-    //   res.end(twiml.toString());
-
+// Received a text message
+router.post('/', async (req, res) => {
+    let result
     try {
-        const newSite = siteService.createSite(req.body)
-        res.status(200).json({
-            message: `Create site, ya'll.`,
-            newSite
-        })
+        result = await siteService.determineAction(req)
     } catch (error) {
-        res.status(error.status || 500).json(error)
+        return res.status(error.status || 500).json(error)
     }
-})
 
-// Read Site
-router.get('/:id', (req, res) => {
-    const id = req.params.id
-    const foundSite = siteService.readSite(id)
-    res.status(200).json({
-        message: `Read One site, ya'll.`,
-        site: foundSite
-    })
-})
+    if (!result)
+        return res.status(418).json({ message: `I don't know what to do with that message.` })
 
-// Update Site
-router.patch('/:id', (req, res) => {
-    const id = req.params.id
-    const data = req.body
-    const updatedSite = siteService.updateSite(id, data)
-    res.status(200).json({
-        message: `Update site, ya'll.`,
-        site: updatedSite
-    })
-})
-
-// Delete Site
-router.delete('/:id', (req, res) => {
-    const id = req.params.id
-    const result = siteService.deleteSite(id)
-    res.status(200).json({
-        message: `Delete site, ya'll.`,
-        success: result
-    })
+    return res.status(200).json(result)
 })
 
 module.exports = router
