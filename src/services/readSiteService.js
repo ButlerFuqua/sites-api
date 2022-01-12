@@ -14,10 +14,10 @@ module.exports = class ReadSiteService {
         }
     }
 
-    async getOneSite(id) {
+    async getOneSite(unique) {
         // Return latest 3 posts
         try {
-            return await Site.findById(id).populate({
+            return await Site.findOne({ unique }).populate({
                 path: 'posts',
                 options: { limit: 3 }
             })

@@ -13,8 +13,8 @@ router.get('/', async (req, res) => {
 })
 
 // Get one Site ==/
-router.get('/:id', async (req, res) => {
-    const site = await readSiteService.getOneSite(req.params.id)
+router.get('/:unique', async (req, res) => {
+    const site = await readSiteService.getOneSite(req.params.unique)
     if (site.error)
         return res.status(site.status).json({ error: site.error })
     res.status(200).json({ site })

@@ -8,6 +8,7 @@ module.exports = class WriteSiteService {
 
     req
     command
+    messageData
     updateSiteCommands
     postCommands
     availableCommands
@@ -110,6 +111,17 @@ module.exports = class WriteSiteService {
 
         const tempSiteName = `${randomName.trim().replace(/_/, '-').replace(/\s/g, '-')}-${tempFromNum}`
 
+        // Make sure the unique name doesn't already exist
+        let foundSites
+        try {
+            foundSites = await Site.find({ unique: tempSiteName.toLowerCase() })
+        } catch (error) {
+            return handle500Error(error)
+        }
+        // It's unlikely to happen, especially twice, so ask to make the site again.
+        if (foundSites.length > 0)
+            return `Sorry, there was a mistake creating your site. Can you send that message again?`
+
         let newSite
         try {
             newSite = await Site.create({ phoneNumber, unique: tempSiteName.toLowerCase() })
@@ -128,8 +140,11 @@ module.exports = class WriteSiteService {
         const message = this.req.body.Body.trim().split(' ')
         if (message[0].toLowerCase() === 'cmd') {
             // check that the command exists and is available
-            if (message[1] && this.availableCommands.includes(message[1].toLowerCase()))
-                return message[1].toLowerCase()
+            if (message[1] && this.availableCommands.includes(message[1].toLowerCase())) {
+                const command = message[1].toLowerCase()
+                this.messageData = this.req.body.Body.replace(/cmd/i, '').replace(command, '').trim()
+                return command
+            }
             else return {
                 error: `Command invalid or missing. Available commands:\n${this.availableCommands.join('\n')}`,
                 status: 400
@@ -140,18 +155,17 @@ module.exports = class WriteSiteService {
 
     async updateSite() {
 
-        // get data to insert
-        const data = this.getDataToInsert()
+        if (this.command === 'unique')
+            this.messageData = this.messageData.toLowerCase().replace(/\s/g, '-')
 
         // update site
-        let site
         try {
-            site = await Site.findOneAndUpdate({ phoneNumber: this.req.body.From }, { [this.command]: data })
+            await Site.findOneAndUpdate({ phoneNumber: this.req.body.From }, { [this.command]: this.messageData })
         } catch (error) {
             return handle500Error(error)
         }
 
-        return { ...site._doc, [this.command]: data }
+        return `Update made! ${this.command} = ${this.messageData}`
     }
 
     async postToSite() {
@@ -167,7 +181,7 @@ module.exports = class WriteSiteService {
         // Create post
         let newPost
         try {
-            newPost = await Post.create({ body: this.getDataToInsert(), site: site._id })
+            newPost = await Post.create({ body: this.messageData, site: site._id })
         } catch (error) {
             return handle500Error(error)
         }
@@ -192,7 +206,7 @@ module.exports = class WriteSiteService {
     async deletePost() {
 
         // Get post id
-        const postId = this.getDataToInsert()
+        const postId = this.messageData
 
         // Get and delete post
         let post
@@ -248,7 +262,7 @@ module.exports = class WriteSiteService {
             return this.areYouSureDelete()
 
         // Check for delete confirmation
-        const confirmation = this.getDataToInsert()
+        const confirmation = this.messageData
         if (confirmation !== site.unique)
             return `Yay! You entered the command in wrong.\nTo permanently delete, send EXACTLY:\ncmd death ${site.unique}`
 
@@ -262,17 +276,13 @@ module.exports = class WriteSiteService {
     }
 
     sendHelp() {
-        const data = (this.getDataToInsert()).toLowerCase()
+        const data = (this.messageData).toLowerCase()
 
         if (data === 'commands' || data === 'command' || data === 'cmd' || data === 'cmds')
             return `Commands:\n${this.availableCommands.join('\n')}`
 
         return `Visit ${this.helpSiteUrl}/ for further help.`
 
-    }
-
-    getDataToInsert() {
-        return this.req.body.Body.replace(/cmd/i, '').replace(this.command, '').trim()
     }
 }
 
