@@ -1,17 +1,31 @@
-const { db } = require('../persistence/')
+const Site = require('../persistence/models/site')
 
 module.exports = class ReadService {
 
-    getSites(criteria) {
-        return db.find(criteria || {})
+    async getSites(criteria) {
+        try {
+            return await Site.find(criteria || {})
+        } catch (error) {
+            return {
+                status: 500,
+                error: error.message || JSON.stringify(error),
+            }
+        }
     }
 
-    getOneSite(id) {
+    async getOneSite(id) {
         // Return latest 3 posts
-        return db.find({ _id: id })
+        try {
+            return await Site.findById(id)
+        } catch (error) {
+            return {
+                status: 500,
+                error: error.message || JSON.stringify(error),
+            }
+        }
     }
 
-    getSitePosts(id) {
+    async getSitePosts(id) {
         // return
     }
 }

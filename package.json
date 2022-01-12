@@ -15,7 +15,10 @@
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.2",
-    "twilio": "^3.72.0"
+    "libphonenumber-js": "^1.9.44",
+    "mongoose": "^6.1.6",
+    "twilio": "^3.72.0",
+    "unique-names-generator": "^4.6.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.15"
