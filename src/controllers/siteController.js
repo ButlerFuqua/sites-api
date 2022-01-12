@@ -31,7 +31,6 @@ router.post('/', async (req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/xml' });
     res.end(twiml.toString());
 
-    return res.status(200).json(result)
 })
 
 
