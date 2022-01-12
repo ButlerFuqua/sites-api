@@ -1,32 +1,44 @@
 const { uniqueNamesGenerator, starWars, colors } = require('unique-names-generator');
 
-
 const Site = require('../persistence/models/site')
 const Post = require('../persistence/models/post')
 require('../persistence')
 
-module.exports = class SiteService {
+module.exports = class WriteSiteService {
 
     req
     command
-    updateSiteCommands = [
-        'title',
-        'unique',
-        'owner',
-        'about',
-        'support',
-    ]
-    postCommands = [
-        'post',
-        'remove',
-    ]
-    availableCommands = [
-        ...this.updateSiteCommands,
-        'delete',
-        'death',
-        'account',
-        ...this.postCommands,
-    ]
+    updateSiteCommands
+    postCommands
+    availableCommands
+    siteUrl
+    helpSiteUrl
+
+    constructor() {
+
+        this.siteUrl = process.env.SITE_URL || 'localhost:5500'
+        this.helpSiteUrl = process.env.HELP_SITE_URL || `${this.siteUrl}/help`
+
+        this.updateSiteCommands = [
+            'title',
+            'unique',
+            'owner',
+            'about',
+            'support',
+        ]
+        this.postCommands = [
+            'post',
+            'remove',
+        ]
+        this.availableCommands = [
+            ...this.updateSiteCommands,
+            'delete',
+            'death',
+            'account',
+            'help',
+            ...this.postCommands,
+        ]
+    }
 
     async determineAction(req) {
 
@@ -47,29 +59,26 @@ module.exports = class SiteService {
             // Error
             if (this.command.error) return this.command
 
-            // Post to site
-            if (this.command === 'post')
-                return await this.postToSite()
-
-            // delete post
-            if (this.command === 'remove')
-                return await this.deletePost()
+            switch (this.command) {
+                case 'post':
+                    return await this.postToSite()
+                case 'remove':
+                    return await this.deletePost()
+                case 'delete':
+                    return await this.areYouSureDelete()
+                case 'death':
+                    return await this.forRealDelete()
+                case 'help':
+                    return this.sendHelp()
+                default:
+                    break;
+            }
 
             // Update site
             if (this.updateSiteCommands.includes(this.command))
                 return await this.updateSite()
-
-            // Are you sure delete
-            if (this.command === 'delete')
-                return await this.areYouSureDelete()
-
-            // For real delete
-            if (this.command === 'death')
-                return await this.forRealDelete()
-
         }
 
-        // Delete a Post
         // Send list of commands
 
         return false
@@ -111,7 +120,7 @@ module.exports = class SiteService {
         if (!newSite)
             return handle500Error(error)
 
-        return `Your site has been created!\nText HELP for how to update and post.\nVisit your site: wwww.site.com/${newSite.unique}`
+        return `Your site has been created!\nText HELP for how to update and post.\nVisit your site: ${this.siteUrl}/${newSite.unique}`
 
     }
 
@@ -177,7 +186,7 @@ module.exports = class SiteService {
             return handle500Error(error)
         }
 
-        return `You made a new post! View at:\nwww.site.com/${site.unique}/${newPost._id}`
+        return `You made a new post! View at:\n${this.siteUrl}/${site.unique}/${newPost._id}`
     }
 
     async deletePost() {
@@ -223,7 +232,6 @@ module.exports = class SiteService {
         }
 
         return `Are you sure you want to delete your site?\nYou'll lose all your data, and there's no getting it back!\nTo delete respond with: cmd death ${site.unique}`
-
     }
 
     async forRealDelete() {
@@ -242,7 +250,7 @@ module.exports = class SiteService {
         // Check for delete confirmation
         const confirmation = this.getDataToInsert()
         if (confirmation !== site.unique)
-            return `Yay! You entered the command in wrong.\nTo permanently delete, send EXACTLY:\n cmd death ${site.unique}`
+            return `Yay! You entered the command in wrong.\nTo permanently delete, send EXACTLY:\ncmd death ${site.unique}`
 
         // delete site
         try {
@@ -251,6 +259,16 @@ module.exports = class SiteService {
         } catch (error) {
             return handle500Error(error)
         }
+    }
+
+    sendHelp() {
+        const data = (this.getDataToInsert()).toLowerCase()
+
+        if (data === 'commands' || data === 'command' || data === 'cmd' || data === 'cmds')
+            return `Commands:\n${this.availableCommands.join('\n')}`
+
+        return `Visit ${this.helpSiteUrl}/ for further help.`
+
     }
 
     getDataToInsert() {

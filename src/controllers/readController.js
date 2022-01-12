@@ -1,12 +1,12 @@
 const express = require('express')
-const ReadService = require('../services/readService')
+const ReadSiteService = require('../services/readSiteService')
 const router = express.Router()
 
-const readService = new ReadService()
+const readSiteService = new ReadSiteService()
 
 // Index ==/
 router.get('/', async (req, res) => {
-    const sites = await readService.getSites()
+    const sites = await readSiteService.getSites()
     if (sites.error)
         return res.status(sites.status).json({ error: sites.error })
     res.status(200).json({ sites })
@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
 
 // Get one Site ==/
 router.get('/:id', async (req, res) => {
-    const site = await readService.getOneSite(req.params.id)
+    const site = await readSiteService.getOneSite(req.params.id)
     if (site.error)
         return res.status(site.status).json({ error: site.error })
     res.status(200).json({ site })
@@ -22,7 +22,8 @@ router.get('/:id', async (req, res) => {
 
 // Get posts ==/
 router.get('/:id/posts', async (req, res) => {
-    const posts = await readService.getSitePosts(req.params.id)
+    const { skip, limit } = req.query
+    const posts = await readSiteService.getSitePosts(req.params.id, skip, limit)
     res.status(200).json({ posts })
 })
 
