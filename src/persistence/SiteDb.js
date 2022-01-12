@@ -1,30 +1,21 @@
-module.exports = class SiteDb {
+const mongoose = require('mongoose')
 
-    db = process.env?.DB || undefined
+module.exports = class SiteDb {
 
     constructor() {
         this.init()
     }
 
     async init() {
+        const DB = process.env?.DB_CONNECT
+        if (!DB)
+            throw new Error(`No connection to DB found.`)
 
-        const DB = process.env?.DB
-
-        if (DB) { // Connect to actual database
-            async (DB) => {
-
-                mongoose.connect(DB, { useNewUrlParser: true, useUnifiedTopology: true })
-
-                const db = mongoose.connection
-                mongoose.set('useCreateIndex', true)
-                db.on('error', console.error.bind(console, 'connection error:'))
-                db.once('open', () => console.log(`Successfully conected to MongoDB production database.`))
-
-            }
-        } else { // Connect to fake data
-            // console.log("require('./fake')()", require('./fake'))
-            return this.db = require('./fake')
+        try {
+            await mongoose.connect(DB, { useNewUrlParser: true, useUnifiedTopology: true })
+            console.log(`Successfully connected to MongoDb.`)
+        } catch (error) {
+            throw new Error(error)
         }
-
     }
 }
