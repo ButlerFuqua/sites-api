@@ -1,7 +1,7 @@
 const express = require('express')
 const WriteSiteService = require('../services/writeSiteService')
 const router = express.Router()
-// const MessagingResponse = require('twilio').twiml.MessagingResponse;
+const MessagingResponse = require('twilio').twiml.MessagingResponse;
 
 const writeSiteService = new WriteSiteService()
 
@@ -31,10 +31,7 @@ router.post('/', async (req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/xml' });
     res.end(twiml.toString());
 
-    return res.status(200).json(result)
 })
-
-
 
 
 module.exports = router
