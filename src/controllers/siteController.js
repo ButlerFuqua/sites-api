@@ -1,7 +1,7 @@
 const express = require('express')
 const WriteSiteService = require('../services/writeSiteService')
 const router = express.Router()
-// const MessagingResponse = require('twilio').twiml.MessagingResponse;
+const MessagingResponse = require('twilio').twiml.MessagingResponse;
 
 const writeSiteService = new WriteSiteService()
 
