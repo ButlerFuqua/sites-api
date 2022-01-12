@@ -18,6 +18,7 @@ module.exports = class SiteService {
     ]
     postCommands = [
         'post',
+        'remove',
     ]
     availableCommands = [
         ...this.updateSiteCommands,
@@ -47,8 +48,12 @@ module.exports = class SiteService {
             if (this.command.error) return this.command
 
             // Post to site
-            if (this.postCommands.includes(this.command))
+            if (this.command === 'post')
                 return await this.postToSite()
+
+            // delete post
+            if (this.command === 'remove')
+                return await this.deletePost()
 
             // Update site
             if (this.updateSiteCommands.includes(this.command))
@@ -64,8 +69,6 @@ module.exports = class SiteService {
 
         }
 
-        // Delete an existing site
-        // Post to site
         // Delete a Post
         // Send list of commands
 
@@ -175,6 +178,39 @@ module.exports = class SiteService {
         }
 
         return `You made a new post! View at:\nwww.site.com/${site.unique}/${newPost._id}`
+    }
+
+    async deletePost() {
+
+        // Get post id
+        const postId = this.getDataToInsert()
+
+        // Get and delete post
+        let post
+        try {
+            post = await Post.findOneAndDelete({ _id: postId })
+        } catch (error) {
+            return handle500Error(error)
+        }
+
+        // Get site
+        let site
+        try {
+            site = await Site.findOne({ phoneNumber: this.req.body.From })
+        } catch (error) {
+            return handle500Error(error)
+        }
+
+        site.posts = site.posts.filter(pstId => pstId.toString() !== post._id.toString())
+
+        try {
+            await site.save()
+        } catch (error) {
+            return handle500Error(error)
+        }
+
+        return `Your post has been deleted.`
+
     }
 
     async areYouSureDelete() {
