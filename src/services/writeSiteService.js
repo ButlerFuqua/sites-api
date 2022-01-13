@@ -253,6 +253,9 @@ module.exports = class WriteSiteService {
         if (!result)
             return `Sorry, something went wrong! Try again?`
 
+        if (typeof result === 'string')
+            return result
+
         if (result.error)
             return result.error
 
