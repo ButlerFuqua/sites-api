@@ -3,6 +3,7 @@ const { uniqueNamesGenerator, starWars, colors } = require('unique-names-generat
 const Site = require('../persistence/models/site')
 const Post = require('../persistence/models/post')
 require('../persistence')
+const SubScriberService = require('./subscriberService')
 
 module.exports = class WriteSiteService {
 
@@ -14,8 +15,11 @@ module.exports = class WriteSiteService {
     availableCommands
     siteUrl
     helpSiteUrl
+    subService
 
     constructor() {
+
+        this.subService = new SubScriberService()
 
         this.siteUrl = process.env.SITE_URL || 'localhost:5500'
         this.helpSiteUrl = process.env.HELP_SITE_URL || `${this.siteUrl}/help`
@@ -37,6 +41,8 @@ module.exports = class WriteSiteService {
             'death',
             'account',
             'help',
+            'up',
+            'down',
             ...this.postCommands,
         ]
     }
@@ -65,6 +71,10 @@ module.exports = class WriteSiteService {
                     return await this.postToSite()
                 case 'remove':
                     return await this.deletePost()
+                case 'up':
+                    return await this.signupSubscriber()
+                case 'down':
+                    return await this.signdownSubscriber()
                 case 'delete':
                     return await this.areYouSureDelete()
                 case 'death':
@@ -132,7 +142,7 @@ module.exports = class WriteSiteService {
         if (!newSite)
             return handle500Error(error)
 
-        return `Your site has been created!\nText HELP for how to update and post.\nVisit your site: ${this.siteUrl}/${newSite.unique}`
+        return `Your site has been created!\nText "cmd help" for how to update and post.\nVisit your site: ${this.siteUrl}/${newSite.unique}`
 
     }
 
@@ -234,6 +244,22 @@ module.exports = class WriteSiteService {
 
         return `Your post has been deleted.`
 
+    }
+
+    async signupSubscriber() {
+        const result = this.subService.signup(this.messageData)
+        if (result.error)
+            return result.error
+
+        return `Yay! You have a new subscriber: ${result.phoneNumber}`
+    }
+
+    async signdownSubscriber() {
+        const result = this.subService.signdown(this.messageData)
+        if (result.error)
+            return result.error
+
+        return `Unsubscribed: ${result.phoneNumber} ..It's okay. There are plenty of fish in the sea.`
     }
 
     async areYouSureDelete() {

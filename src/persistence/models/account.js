@@ -3,7 +3,6 @@ const mongoose = require('mongoose')
 // Define Schema ====== //
 const schema = new mongoose.Schema({
     accountType: { type: String },
-
 }, {
     timestamps: {
         createdAt: `created_at`,

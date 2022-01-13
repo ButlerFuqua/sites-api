@@ -3,11 +3,10 @@ const { Schema } = mongoose
 const { parsePhoneNumber } = require('libphonenumber-js')
 
 // Define Schema ====== //
-const schema = new Schema({
+const schema = new mongoose.Schema({
     phoneNumber: {
         type: String,
         required: true,
-        unique: true,
         validate: {
             validator: phoneNumber => {
                 return new Promise((resolve, reject) => {
@@ -18,16 +17,7 @@ const schema = new Schema({
             }
         }
     },
-    unique: { type: String, required: true, unique: true },
-    title: { type: String, },
-    owner: { type: String, },
-    about: { type: String, },
-    support: { type: String, },
-    account: { type: Schema.Types.ObjectId, ref: 'Account' },
-    posts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
-    subscribers: [{ type: Schema.Types.ObjectId, ref: 'Subscriber' }],
-    stagedForDeletion: { type: Boolean, default: false }
-
+    sites: [{ type: Schema.Types.ObjectId, ref: 'Site', required: true }]
 }, {
     timestamps: {
         createdAt: `created_at`,
@@ -36,5 +26,5 @@ const schema = new Schema({
 })
 
 // Export ====== //
-const Site = mongoose.model(`Site`, schema)
-module.exports = Site
+const Subscriber = mongoose.model(`Subscriber`, schema)
+module.exports = Subscriber
