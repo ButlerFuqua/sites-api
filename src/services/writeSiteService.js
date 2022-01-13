@@ -1,4 +1,5 @@
 const { uniqueNamesGenerator, starWars, colors } = require('unique-names-generator');
+const { parsePhoneNumber } = require('libphonenumber-js')
 
 const Site = require('../persistence/models/site')
 const Post = require('../persistence/models/post')
@@ -98,9 +99,10 @@ module.exports = class WriteSiteService {
 
     async isCreateSite() {
         // check if there is a site with the following number
+        const parsedNumber = parsePhoneNumber(this.req.body.From, 'US')
         let foundSites
         try {
-            foundSites = await Site.find({ phoneNumber: this.req.body.From })
+            foundSites = await Site.find({ phoneNumber: parsedNumber.number })
         } catch (error) {
             return handle500Error(error)
         }
@@ -115,9 +117,9 @@ module.exports = class WriteSiteService {
             length: 2
         })
 
-        const phoneNumber = this.req.body.From
+        const phoneNumber = parsePhoneNumber(this.req.body.From, 'US')
 
-        const tempFromNum = phoneNumber.substring(6)
+        const tempFromNum = phoneNumber.number.substring(6)
 
         const tempSiteName = `${randomName.trim().replace(/_/, '-').replace(/\s/g, '-')}-${tempFromNum}`
 
@@ -134,7 +136,7 @@ module.exports = class WriteSiteService {
 
         let newSite
         try {
-            newSite = await Site.create({ phoneNumber, unique: tempSiteName.toLowerCase() })
+            newSite = await Site.create({ phoneNumber: phoneNumber.number, unique: tempSiteName.toLowerCase() })
         } catch (error) {
             return handle500Error(error)
         }
@@ -247,15 +249,26 @@ module.exports = class WriteSiteService {
     }
 
     async signupSubscriber() {
-        const result = this.subService.signup(this.messageData)
+        const result = await this.subService.signup(this.req.body.From, this.messageData)
+        if (!result)
+            return `Sorry, something went wrong! Try again?`
+
         if (result.error)
             return result.error
+
 
         return `Yay! You have a new subscriber: ${result.phoneNumber}`
     }
 
     async signdownSubscriber() {
-        const result = this.subService.signdown(this.messageData)
+        const result = await this.subService.signdown(this.req.body.From, this.messageData)
+
+        if (!result)
+            return `Sorry, something went wrong! Try again?`
+
+        if (typeof result === 'string')
+            return result
+
         if (result.error)
             return result.error
 
@@ -291,6 +304,13 @@ module.exports = class WriteSiteService {
         const confirmation = this.messageData
         if (confirmation !== site.unique)
             return `Yay! You entered the command in wrong.\nTo permanently delete, send EXACTLY:\ncmd death ${site.unique}`
+
+        // Delete all posts by site
+        try {
+            await Post.deleteMany({ site: site._id })
+        } catch (error) {
+            return handle500Error(error)
+        }
 
         // delete site
         try {

@@ -5,25 +5,31 @@ const { parsePhoneNumber } = require('libphonenumber-js')
 
 module.exports = class SubScriberService {
 
-    async signup(id, phoneNumber) {
+    async signup(sitePhoneNumber, subPhoneNumber) {
+        const parsedSiteNumber = parsePhoneNumber(sitePhoneNumber, 'US')
         // Get site and current subscribers
         let site
         try {
-            site = await Site.findById(id).populate('subscribers')
+            site = await Site.findOne({ phoneNumber: parsedSiteNumber.number }).populate('subscribers')
         } catch (error) {
             return {
                 status: 500,
                 error: error.message || JSON.stringify(error),
             }
         }
+        if (!site)
+            return {
+                status: 404,
+                error: `Site not found for phone number: ${sitePhoneNumber}`
+            }
 
         // Check that user has not already subscribed to the site
-        const parsedNumber = parsePhoneNumber(phoneNumber, 'US')
-        if (!parsedNumber.isValid()) return {
+        const parsedSubNumber = parsePhoneNumber(subPhoneNumber, 'US')
+        if (!parsedSubNumber.isValid()) return {
             status: 400,
-            error: `Not a valid US number: ${phoneNumber}`
+            error: `Not a valid US number: ${subPhoneNumber}`
         }
-        const alreadySubscribed = site.subscribers.map(num => parsePhoneNumber(num, 'US')).find(sub => sub.number === parsedNumber.number)
+        const alreadySubscribed = site.subscribers.map(num => parsePhoneNumber(num, 'US')).find(sub => sub.number === parsedSubNumber.number)
         if (alreadySubscribed)
             return {
                 status: 400,
@@ -33,88 +39,105 @@ module.exports = class SubScriberService {
         // check if it already exists
         let subscriber
         try {
-            subscriber = await Subscriber.findOne({ phoneNumber: parsedNumber })
+            subscriber = await Subscriber.findOne({ phoneNumber: parsedSubNumber.number })
         } catch (error) {
             return handle500Error(error)
         }
 
         if (subscriber) {
-            // Update and return response
+            // Associate site to subscriber
             try {
                 subscriber.sites = [...subscriber.sites, site._id]
-                return await subscriber.save()
+                await subscriber.save()
             } catch (error) {
                 return handle500Error(error)
             }
 
         } else {
-            // Create and return response
+            // Create new subscriber
             try {
-                return await Subscriber.create({ phoneNumber: parsedNumber, sites: [site._id] })
+                subscriber = await Subscriber.create({ phoneNumber: parsedSubNumber.number, sites: [site._id] })
             } catch (error) {
                 return handle500Error(error)
             }
         }
 
+        // Add subscriber to site and return
+        try {
+            site.subscribers = [...site.subscribers, subscriber._id]
+            await site.save()
+            return subscriber
+        } catch (error) {
+            return handle500Error(error)
+        }
+
     }
 
-    async signdown(id, phoneNumber) {
-        // Get site and current subscribers
-        let site
-        try {
-            site = await Site.findById(id).populate('subscribers')
-        } catch (error) {
-            return {
-                status: 500,
-                error: error.message || JSON.stringify(error),
-            }
-        }
+    async signdown(sitePhoneNumber, subPhoneNumber) {
 
-        // find subscriber to remove
-        const parsedNumber = parsePhoneNumber(phoneNumber, 'US')
-        if (!parsedNumber.isValid()) return {
+        // get subscriber
+        const parsedSubNumber = parsePhoneNumber(subPhoneNumber, 'US')
+        if (!parsedSubNumber.isValid()) return {
             status: 400,
-            error: `Not a valid US number: ${phoneNumber}`
+            error: `Not a valid US number: ${subPhoneNumber}`
         }
-        const subToRemove = site.subscribers.find(sub => (parsePhoneNumber(sub.phoneNumber, 'US')).number === parsedNumber.number)
-        if (!subToRemove)
-            return {
-                status: 400,
-                error: `Subscriber to remove is not subscribed.`,
-            }
-
-        // remove from site and save to db
+        let subToRemove
         try {
-            site.subscribers = site.subscribers.filter(sub => sub._id.toString() != subToRemove._id.toString())
+            subToRemove = await Subscriber.findOne({ phoneNumber: parsedSubNumber.number })
+        } catch (error) {
+            return handle500Error(error)
+        }
+
+        // get site
+        let site
+        const parsedSiteNumber = parsePhoneNumber(sitePhoneNumber, 'US')
+        if (!parsedSiteNumber.isValid()) return {
+            status: 400,
+            error: `Not a valid US number: ${sitePhoneNumber}`
+        }
+        try {
+            site = await Site.findOne({ phoneNumber: parsedSiteNumber.number })
+        } catch (error) {
+            return handle500Error(error)
+        }
+
+        // remove refs
+        site.subscribers = site.subscribers.filter(subId => subId.toString() !== subToRemove._id.toString())
+        subToRemove.sites = subToRemove.sites.filter(siteId => siteId.toString() !== site._id.toString())
+
+
+        // Save site
+        try {
             await site.save()
         } catch (error) {
             return handle500Error(error)
         }
 
-        // see if subscriber needs to be deleted completely, if they are not associated with another site
-        let associatedSites
-        try {
-            associatedSites = await Site.find({ subscribers: subToRemove._id })
-        } catch (error) {
-            return handle500Error(error)
+        // find if sub has other sites
+        const deleteSub = subToRemove.sites.length < 1
+
+        if (deleteSub) {
+            try {
+                await Subscriber.findOneAndDelete({ _id: subToRemove._id })
+            } catch (error) {
+                return handle500Error(error)
+            }
+        }
+        else {
+            // keep sub because it's associated to other sites
+            try {
+                await subToRemove.save()
+            } catch (error) {
+                return handle500Error(error)
+            }
         }
 
-        // Delete if not subscribed to any other site
-        if (associatedSites.length < 2) { // 2 because it hasn't been removed from the current site
-            try {
-                return await Subscriber.findOneAndDelete({ _id: subToRemove._id })
-            } catch (error) {
-                return handle500Error(error)
-            }
-        } else {
-            // remove site from subscriber array
-            try {
-                subToRemove.sites = subToRemove.sites.filter(subSite => subSite._id != site._id)
-                return await subToRemove.save()
-            } catch (error) {
-                return handle500Error(error)
-            }
-        }
+        return { phoneNumber: subPhoneNumber }
+
+    }
+
+    async deleteFloatingSubscribers() {
+        // TODO - delete all subscribers that have no existing site
     }
 
     async getSiteSubscribers(id) {
