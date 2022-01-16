@@ -19,7 +19,7 @@ module.exports = class ReadSiteService {
         try {
             return await Site.findOne({ unique }).populate({
                 path: 'posts',
-                options: { limit: 3 }
+                options: { limit: 3, sort: { 'updated_at': -1 } }
             })
         } catch (error) {
             return {
@@ -31,7 +31,18 @@ module.exports = class ReadSiteService {
 
     async getSitePosts(id, skip, limit) {
         try {
-            return await Post.find({ site: id }, null, { skip: skip || 0, limit: limit || 10, }).exec()
+            return await Post.find({ site: id }, null, { sort: { 'updated_at': -1 }, skip: skip || 0, limit: limit || 10, }).exec()
+        } catch (error) {
+            return {
+                status: 500,
+                error: error.message || JSON.stringify(error),
+            }
+        }
+    }
+
+    async getOnePost(id) {
+        try {
+            return await Post.findById(id)
         } catch (error) {
             return {
                 status: 500,

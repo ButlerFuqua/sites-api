@@ -26,7 +26,7 @@ const schema = new Schema({
     account: { type: Schema.Types.ObjectId, ref: 'Account' },
     posts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
     subscribers: [{ type: Schema.Types.ObjectId, ref: 'Subscriber' }],
-    stagedForDeletion: { type: Boolean, default: false }
+    stagedForDeletion: { type: Boolean, default: false },
 
 }, {
     timestamps: {

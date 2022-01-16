@@ -181,14 +181,17 @@ module.exports = class WriteSiteService {
     }
 
     async postToSite() {
-
+        const parsedNumber = parsePhoneNumber(this.req.body.From, 'US')
         // Get site
         let site
         try {
-            site = await Site.findOne({ phoneNumber: this.req.body.From })
+            site = await Site.findOne({ phoneNumber: parsedNumber.number })
         } catch (error) {
             return handle500Error(error)
         }
+
+        if (!site)
+            return `Sorry, site not found for number ${this.req.body.From}`
 
         // Create post
         let newPost
