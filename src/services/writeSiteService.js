@@ -170,12 +170,20 @@ module.exports = class WriteSiteService {
         if (this.command === 'unique')
             this.messageData = this.messageData.toLowerCase().replace(/\s/g, '-')
 
+        // parse number
+        const phoneNumber = this.req.body.From
+        const parsedNumber = parsePhoneNumber(phoneNumber, 'US')
+
         // update site
+        let result
         try {
-            await Site.findOneAndUpdate({ phoneNumber: this.req.body.From }, { [this.command]: this.messageData })
+            result = await Site.findOneAndUpdate({ phoneNumber: parsedNumber.number }, { [this.command]: this.messageData })
         } catch (error) {
             return handle500Error(error)
         }
+
+        if (!result)
+            return `Sorry! Couldn't find for the number ${phoneNumber}`
 
         return `Update made! ${this.command} = ${this.messageData}`
     }
