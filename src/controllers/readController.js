@@ -6,7 +6,8 @@ const readSiteService = new ReadSiteService()
 
 // Index ==/
 router.get('/', async (req, res) => {
-    const sites = await readSiteService.getSites()
+    const { skip, limit } = req.query
+    const sites = await readSiteService.getSites(null, skip, limit)
     if (sites.error)
         return res.status(sites.status).json({ error: sites.error })
     res.status(200).json({ sites })

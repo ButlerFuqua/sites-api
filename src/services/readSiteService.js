@@ -3,9 +3,10 @@ const Post = require('../persistence/models/post')
 
 module.exports = class ReadSiteService {
 
-    async getSites(criteria) {
+    async getSites(criteria, skip, limit) {
         try {
-            return await Site.find(criteria || {})
+            return await Site.find(criteria || {}, null, { sort: { 'updated_at': -1 }, skip: skip || 0, limit: limit || 10, }).exec()
+
         } catch (error) {
             return {
                 status: 500,
