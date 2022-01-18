@@ -42,7 +42,7 @@ module.exports = class ReadSiteService {
 
     async getOnePost(id) {
         try {
-            return await Post.findById(id)
+            return await Post.findById(id).populate('comments')
         } catch (error) {
             return {
                 status: 500,
