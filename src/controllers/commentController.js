@@ -9,7 +9,6 @@ const commentService = new CommentService()
 router.post('/:postId', async (req, res) => {
     const { postId } = req.params
     const { commentBody, phoneNumber, displayName } = req.body
-    console.log(req.body)
     if (!commentBody || !phoneNumber || !displayName)
         return res.status(400).json({ error: `phoneNumber, displayName, and commentBody are required.` })
 
