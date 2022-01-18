@@ -27,6 +27,8 @@ const schema = new Schema({
     posts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
     subscribers: [{ type: Schema.Types.ObjectId, ref: 'Subscriber' }],
     stagedForDeletion: { type: Boolean, default: false },
+    inNetwork: { type: Boolean, default: true },
+
 
 }, {
     timestamps: {
