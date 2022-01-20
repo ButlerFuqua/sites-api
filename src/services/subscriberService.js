@@ -55,7 +55,7 @@ module.exports = class SubScriberService {
         // save/create subscribers and return value
         const [phoneSubscriber, emailSubscriber] = await Promise.all([
             this.signupPhoneSubscriber(site, subPhoneNumber),
-            this.signupEmailSubscriber(site, email),
+            this.signupEmailSubscriber(site, email?.toLowerCase()),
         ])
 
         if (phoneSubscriber?.error || emailSubscriber?.error)
@@ -167,6 +167,167 @@ module.exports = class SubScriberService {
         }
         return subscriberEmail
 
+    }
+
+    async signdownFromSite(siteId, options) {
+
+        // TODO come up with some sort of auth, maybe a token.
+
+        const { email, phone: phoneNumber } = options
+        if (!email && !phoneNumber) return {
+            status: 400,
+            error: `No email or phone number.`
+        }
+
+        // Validate phone
+        let parsedSubNumber
+        let subPhoneNumber
+        if (phoneNumber) {
+            parsedSubNumber = parsePhoneNumber(phoneNumber, 'US')
+            if (!parsedSubNumber.isValid()) return {
+                status: 400,
+                error: `Not a valid US number: ${phoneNumber}`
+            }
+            subPhoneNumber = parsedSubNumber.number
+        }
+
+        // Validate email
+        if (email) {
+            const regex = RegExp(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/)
+            if (!regex.test(email)) return {
+                status: 400,
+                error: `Not a valid email: ${email}`
+            }
+        }
+
+
+        // Get site and current subscribers
+        let site
+        try {
+            site = await Site.findById(siteId).populate('phoneSubscribers').populate('emailSubscribers')
+        } catch (error) {
+            return {
+                status: 500,
+                error: error.message || JSON.stringify(error),
+            }
+        }
+        if (!site)
+            return {
+                status: 404,
+                error: `Site not found, ID: ${siteId}`
+            }
+
+        // save/create subscribers and return value
+        const [phoneSubscriber, emailSubscriber] = await Promise.all([
+            this.signdownPhoneSubscriber(site, subPhoneNumber),
+            this.signdownEmailSubscriber(site, email?.toLowerCase()),
+        ])
+
+        // Create errors array to push
+        let errors = []
+        if (phoneSubscriber?.error)
+            errors.push(phoneSubscriber.error)
+        if (emailSubscriber?.error)
+            errors.push(emailSubscriber.error)
+
+
+        // Update site
+        if (phoneSubscriber && !phoneSubscriber?.error)
+            site.phoneSubscribers = site.phoneSubscribers.filter(sub => sub._id.toString() !== phoneSubscriber._id.toString())
+        if (emailSubscriber && !emailSubscriber?.error)
+            site.emailSubscribers = site.emailSubscribers.filter(sub => sub._id.toString() !== emailSubscriber._id.toString())
+
+        try {
+            await site.save()
+        } catch (error) {
+            return handle500Error(error)
+        }
+
+        return {
+            status: 200,
+            phone: subPhoneNumber && !phoneSubscriber?.error ? `Unsubscribed ${subPhoneNumber}` : null,
+            email: email && !emailSubscriber?.error ? `Unsubscribed ${email}` : null,
+            errors,
+        }
+    }
+
+    async signdownPhoneSubscriber(site, subPhoneNumber) {
+        if (!subPhoneNumber)
+            return null
+
+        // Get subscriber
+        let subscriber
+        try {
+            subscriber = await PhoneSubscriber.findOne({ phoneNumber: subPhoneNumber })
+        } catch (error) {
+            return handle500Error(error)
+        }
+
+
+        if (!subscriber)
+            return {
+                status: 404,
+                error: `Phone subscriber not found: ${subPhoneNumber}`
+            }
+
+        // Remove site from sites
+        subscriber.sites = subscriber.sites.filter(subbedSite => subbedSite._id.toString() !== site._id.toString())
+
+        // decide to update or delete
+        if (subscriber.sites.length < 1) {
+            try {
+                await PhoneSubscriber.findByIdAndDelete(subscriber._id)
+            } catch (error) {
+                return handle500Error(error)
+            }
+        } else {
+            try {
+                await subscriber.save()
+            } catch (error) {
+                return handle500Error(error)
+            }
+        }
+
+        return subscriber
+    }
+
+    async signdownEmailSubscriber(site, email) {
+        if (!email)
+            return null
+
+        // Get subscriber
+        let subscriber
+        try {
+            subscriber = await EmailSubscriber.findOne({ email })
+        } catch (error) {
+            return handle500Error(error)
+        }
+
+        if (!subscriber)
+            return {
+                status: 404,
+                error: `Email subscriber not found: ${email}`
+            }
+
+        // Remove site from sites
+        subscriber.sites = subscriber.sites.filter(subbedSite => subbedSite._id.toString() !== site._id.toString())
+
+        // decide to update or delete
+        if (subscriber.sites.length < 1) {
+            try {
+                await EmailSubscriber.findByIdAndDelete(subscriber._id)
+            } catch (error) {
+                return handle500Error(error)
+            }
+        } else {
+            try {
+                await subscriber.save()
+            } catch (error) {
+                return handle500Error(error)
+            }
+        }
+
+        return subscriber
     }
 
 

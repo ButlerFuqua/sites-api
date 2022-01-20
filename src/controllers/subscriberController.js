@@ -4,18 +4,30 @@ const router = express.Router()
 
 const subscriberService = new SubscriberService()
 
-// Received a text message
+// Subscribe from site
 router.post('/:siteId', async (req, res) => {
     const { siteId } = req.params
     const { phoneNumber, email } = req.body
     if (!phoneNumber && !email)
-        return res.status(400).json({ error: `A phoneNumber or email is required.` })
+        return res.status(400).json({ error: `A phone number or email is required.` })
 
     const result = await subscriberService.signupFromSite(siteId, { phoneNumber, email })
     if (!result)
         return res.status(418).json({ error: `I don't know what to do with that request.` })
 
-    console.log('result', result)
+    res.status(result.status).json(result)
+})
+
+// Unsubscribe from link
+router.post('/:siteId/unsubscribe', async (req, res) => {
+    const { siteId } = req.params
+    const { phone, email } = req.query
+    if (!phone && !email)
+        return res.status(400).json({ error: `A phone number or email is required.` })
+
+    const result = await subscriberService.signdownFromSite(siteId, { phone, email })
+    if (!result)
+        return res.status(418).json({ error: `I don't know what to do with that request.` })
 
     res.status(result.status).json(result)
 })
