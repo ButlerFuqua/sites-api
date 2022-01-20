@@ -25,7 +25,8 @@ const schema = new Schema({
     support: { type: String, },
     account: { type: Schema.Types.ObjectId, ref: 'Account' },
     posts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
-    subscribers: [{ type: Schema.Types.ObjectId, ref: 'Subscriber' }],
+    phoneSubscribers: [{ type: Schema.Types.ObjectId, ref: 'PhoneSubscriber' }],
+    emailSubscribers: [{ type: Schema.Types.ObjectId, ref: 'EmailSubscriber' }],
     stagedForDeletion: { type: Boolean, default: false },
     inNetwork: { type: Boolean, default: true },
 

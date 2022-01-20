@@ -26,5 +26,5 @@ const schema = new mongoose.Schema({
 })
 
 // Export ====== //
-const Subscriber = mongoose.model(`Subscriber`, schema)
-module.exports = Subscriber
+const PhoneSubscriber = mongoose.model(`PhoneSubscriber`, schema)
+module.exports = PhoneSubscriber
