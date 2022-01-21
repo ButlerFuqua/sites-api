@@ -7,7 +7,8 @@ const Command = require('../persistence/models/command')
 require('../persistence')
 const SubScriberService = require('./subscriberService')
 
-const blackListedUniques = require('./data/blackListedUniques')
+const blackListedUniques = require('./data/blackListedUniques');
+const Account = require('../persistence/models/account');
 
 module.exports = class WriteSiteService {
 
@@ -133,9 +134,17 @@ module.exports = class WriteSiteService {
         if (foundSites.length > 0)
             return `Sorry, there was a mistake creating your site. Can you send that message again?`
 
+        // Get free account as default
+        let account
+        try {
+            account = await Account.findOne({ name: 'free' })
+        } catch (error) {
+            return handle500Error(errror)
+        }
+
         let newSite
         try {
-            newSite = await Site.create({ phoneNumber: phoneNumber.number, unique: tempSiteName.toLowerCase() })
+            newSite = await Site.create({ phoneNumber: phoneNumber.number, unique: tempSiteName.toLowerCase(), account: account._id })
         } catch (error) {
             return handle500Error(error)
         }

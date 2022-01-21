@@ -4,3 +4,4 @@ node_modules
 
 src/persistence/seedData.js
 src/persistence/createCommands.js
+src/persistence/createAccounts.js
