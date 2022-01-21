@@ -3,8 +3,11 @@ const { parsePhoneNumber } = require('libphonenumber-js')
 
 const Site = require('../persistence/models/site')
 const Post = require('../persistence/models/post')
+const Command = require('../persistence/models/command')
 require('../persistence')
 const SubScriberService = require('./subscriberService')
+
+const blackListedUniques = require('./data/blackListedUniques')
 
 module.exports = class WriteSiteService {
 
@@ -12,40 +15,37 @@ module.exports = class WriteSiteService {
     command
     messageData
     updateSiteCommands
-    postCommands
     availableCommands
     siteUrl
     helpSiteUrl
     subService
+    blackListedUniques
 
     constructor() {
+        this.init()
+    }
 
+    async init() {
         this.subService = new SubScriberService()
 
-        this.siteUrl = process.env.SITE_URL || 'localhost:5500'
+        this.siteUrl = process.env.SITE_URL || 'localhost:3000'
         this.helpSiteUrl = process.env.HELP_SITE_URL || `${this.siteUrl}/help`
 
-        this.updateSiteCommands = [
-            'title',
-            'unique',
-            'owner',
-            'about',
-            'support',
-        ]
-        this.postCommands = [
-            'post',
-            'remove',
-        ]
-        this.availableCommands = [
-            ...this.updateSiteCommands,
-            'delete',
-            'death',
-            'account',
-            'help',
-            'up',
-            'down',
-            ...this.postCommands,
-        ]
+        this.blackListedUniques = blackListedUniques
+
+        await this.fetchCommands()
+    }
+
+    async fetchCommands() {
+        let allCommands
+        try {
+            allCommands = await Command.find()
+        } catch (error) {
+            return handle500Error(error)
+        }
+        this.availableCommands = allCommands.map(cmd => cmd.name)
+        this.updateSiteCommands = allCommands.filter(cmd => cmd.updateCommand).map(cmd => cmd.name)
+
     }
 
     async determineAction(req) {
@@ -59,7 +59,6 @@ module.exports = class WriteSiteService {
         // Create a new site
         if (await this.isCreateSite())
             return await this.createSite()
-
 
         // Is it a command
         this.command = this.isCommand()
@@ -144,31 +143,30 @@ module.exports = class WriteSiteService {
         if (!newSite)
             return handle500Error(error)
 
-        return `Your site has been created!\nText "cmd help" for how to update and post.\nVisit your site: ${this.siteUrl}/${newSite.unique}`
+        return `Your site has been created!\nText "help" for how to update and post.\nVisit your site: ${this.siteUrl}/${newSite.unique}`
 
     }
 
     isCommand() {
         const message = this.req.body.Body.trim().split(' ')
-        if (message[0].toLowerCase() === 'cmd') {
-            // check that the command exists and is available
-            if (message[1] && this.availableCommands.includes(message[1].toLowerCase())) {
-                const command = message[1].toLowerCase()
-                this.messageData = this.req.body.Body.replace(/cmd/i, '').replace(command, '').trim()
-                return command
-            }
-            else return {
-                error: `Command invalid or missing. Available commands:\n${this.availableCommands.join('\n')}`,
-                status: 400
-            }
+        if (this.availableCommands.includes(message[0].toLowerCase())) {
+            const command = message[0].toLowerCase()
+            this.messageData = this.req.body.Body.replace(message[0], '').trim()
+            return command
         }
-        return false
+        else return {
+            error: `Command invalid or missing. Available commands:\n${this.availableCommands.join('\n')}`,
+            status: 400
+        }
     }
 
     async updateSite() {
 
-        if (this.command === 'unique')
+        if (this.command === 'unique') {
+            if (this.blackListedUniques.includes(this.messageData.toLowerCase()))
+                return `Sorry, ${this.messageData} is not available as a unique name.`
             this.messageData = this.messageData.toLowerCase().replace(/\s/g, '-')
+        }
 
         // parse number
         const phoneNumber = this.req.body.From
@@ -223,7 +221,7 @@ module.exports = class WriteSiteService {
             return handle500Error(error)
         }
 
-        return `You made a new post! View at:\n${this.siteUrl}/${site.unique}/${newPost._id}`
+        return `You made a new post! View at:\n${this.siteUrl}/${site.unique}/posts/${newPost._id}`
     }
 
     async deletePost() {
