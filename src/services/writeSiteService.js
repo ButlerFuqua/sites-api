@@ -82,6 +82,8 @@ module.exports = class WriteSiteService {
                     return await this.forRealDelete()
                 case 'help':
                     return this.sendHelp()
+                case 'account':
+                    return this.updateAccount()
                 default:
                     break;
             }
@@ -134,10 +136,10 @@ module.exports = class WriteSiteService {
         if (foundSites.length > 0)
             return `Sorry, there was a mistake creating your site. Can you send that message again?`
 
-        // Get free account as default
+        // Get Free account as default
         let account
         try {
-            account = await Account.findOne({ name: 'free' })
+            account = await Account.findOne({ name: 'Free' })
         } catch (error) {
             return handle500Error(errror)
         }
@@ -172,7 +174,8 @@ module.exports = class WriteSiteService {
     async updateSite() {
 
         if (this.command === 'unique') {
-            if (this.blackListedUniques.includes(this.messageData.toLowerCase()))
+            const unique = this.messageData.toLowerCase().replace(/-/g, '').replace(/_/g, '').replace(/\s/g, '')
+            if (this.blackListedUniques.includes(unique))
                 return `Sorry, ${this.messageData} is not available as a unique name.`
             this.messageData = this.messageData.toLowerCase().replace(/\s/g, '-')
         }
@@ -350,6 +353,10 @@ module.exports = class WriteSiteService {
 
         return `Visit ${this.helpSiteUrl}/ for further help.`
 
+    }
+
+    updateAccount() {
+        return `Visit this link to update your account: ${this.siteUrl}/account`
     }
 }
 

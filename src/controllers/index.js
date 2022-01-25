@@ -12,5 +12,7 @@ router.use(`/read`, require('./readController'))
 router.use(`/comments`, require('./commentController'))
 // Subscriber
 router.use(`/subscriber`, require('./subscriberController'))
+// Newsletter
+router.use(`/newsletter`, require('./newsletterController'))
 
 module.exports = router

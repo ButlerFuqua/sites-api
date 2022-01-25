@@ -3,8 +3,35 @@ const Post = require('../persistence/models/post')
 const PhoneSubscriber = require('../persistence/models/phoneSubscriber')
 const EmailSubscriber = require('../persistence/models/emailSubscriber')
 const { parsePhoneNumber } = require('libphonenumber-js')
+const Account = require('../persistence/models/account')
 
 module.exports = class SubScriberService {
+
+    async getAllSubscribers({ getSitesToo }) {
+        // get all phoneSubscribers
+        let phoneSubscribers
+        try {
+            if (getSitesToo)
+                phoneSubscribers = await PhoneSubscriber.find().populate('sites', 'unique')
+            else
+                phoneSubscribers = await PhoneSubscriber.find()
+        } catch (error) {
+            phoneSubscribers = { error }
+        }
+
+        // get all emailSubscribers
+        let emailSubscribers
+        try {
+            if (getSitesToo)
+                emailSubscribers = await EmailSubscriber.find().populate('sites', 'unique')
+            else
+                emailSubscribers = await EmailSubscriber.find()
+        } catch (error) {
+            emailSubscribers = { error }
+        }
+
+        return { phoneSubscribers, emailSubscribers }
+    }
 
     async signupFromSite(siteId, options) {
 
@@ -80,19 +107,28 @@ module.exports = class SubScriberService {
         }
     }
 
+
+
     async signupPhoneSubscriber(site, subPhoneNumber) {
         if (!subPhoneNumber)
             return null
 
-        // Check that user has not already subscribed to the site
-        // by phone
 
+
+        // Check that user has not already subscribed to the site
         const alreadySubscribedByPhone = site.phoneSubscribers.filter(sub => sub.phoneNumber).map(sub => parsePhoneNumber(sub.phoneNumber, 'US')).find(sub => sub.number === subPhoneNumber)
 
         // Return if both are subscribed
         if (alreadySubscribedByPhone)
             return null
 
+        // Make sure account allows another subscription
+        const allowMore = await this.doesAccountAllowMoreSubs(site)
+        if (!allowMore)
+            return {
+                status: 400,
+                error: `Account does not allow any more subscribers.`
+            }
 
         // check if it already exists
         let subscriberPhone
@@ -130,6 +166,9 @@ module.exports = class SubScriberService {
     async signupEmailSubscriber(site, email) {
         if (!email)
             return null
+
+
+
         // Check that user has not already subscribed to the site
         const alreadySubscribedByEmail = site.emailSubscribers.find(sub => sub.email === email)
 
@@ -137,6 +176,13 @@ module.exports = class SubScriberService {
         if (alreadySubscribedByEmail)
             return null
 
+        // Make sure account allows another subscription
+        const allowMore = await this.doesAccountAllowMoreSubs(site)
+        if (!allowMore)
+            return {
+                status: 400,
+                error: `Account does not allow any more subscribers.`
+            }
 
         // check if it already exists
         let subscriberEmail
@@ -168,6 +214,21 @@ module.exports = class SubScriberService {
         return subscriberEmail
 
     }
+
+
+    async doesAccountAllowMoreSubs(site) {
+        // Make sure account allows another subscription
+        let account
+        try {
+            account = await Account.findById(site.account)
+        } catch (error) {
+            return handle500Error(error)
+        }
+        const currentSubCount = site.phoneSubscribers.length + site.emailSubscribers.length
+        const subFeature = account.features.find(feature => feature.name === 'Subscribers')
+        return currentSubCount < subFeature.max
+    }
+
 
     async signdownFromSite(siteId, options) {
 

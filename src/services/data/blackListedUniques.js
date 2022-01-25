@@ -1,4 +1,5 @@
-module.exports = [
+
+const frontend = [
     'help',
     'sites',
     'index',
@@ -8,14 +9,60 @@ module.exports = [
     'example',
     'go-modern',
     'gomodern',
+    '404',
+    'knowledge',
+    'store',
+    'shop',
+    'account',
+    'accounts',
+    'pricing',
+    'price',
+    'about',
+    'details',
+    'cancel',
+    'admin',
+    'support',
+    'blog',
+    'terms',
+    'termsandconditions',
+    'policy',
+    'privacypolicy',
+    'privacy',
+    'legal',
+    'confirm',
+    'confirmation',
+    'info',
+    'information',
+    'new',
+    'updates',
+    'business',
+    'contact',
+    'login',
+    'logout',
+    'dashboard',
+    'users',
+    'unique',
+    '_unique',
+]
+
+const affiliates = [
+    'ryan',
+    'ryanmaher',
+    'biblelockscreen',
+    'biblelockscreens',
+]
+
+const personal = [
     'butler',
     'butlerfuqua',
     'hannahfuqua',
     'winonafuqua',
     'benjaminfuqua',
     'carolinefuqua',
-    '404',
-    'knowledge',
-    'store',
-    'shop',
+]
+
+module.exports = [
+    ...frontend,
+    ...personal,
+    ...affiliates,
 ]

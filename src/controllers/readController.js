@@ -37,4 +37,10 @@ router.get('/posts/:id', async (req, res) => {
     res.status(200).json({ post })
 })
 
+// Read Accounts ==/
+router.get('/available/accounts', async (req, res) => {
+    const accounts = await readSiteService.getAccounts()
+    res.status(200).json({ accounts })
+})
+
 module.exports = router

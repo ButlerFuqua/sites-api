@@ -1,5 +1,6 @@
 const Site = require('../persistence/models/site')
 const Post = require('../persistence/models/post')
+const Account = require('../persistence/models/account')
 
 module.exports = class ReadSiteService {
 
@@ -11,6 +12,21 @@ module.exports = class ReadSiteService {
             return {
                 status: 500,
                 error: error.message || JSON.stringify(error),
+            }
+        }
+    }
+
+    async getAllSites(populateSubs) {
+        try {
+            if (populateSubs) {
+                return await Site.find().populate('phoneSubscribers').populate('emailSubscribers')
+            } else {
+                return await Site.find()
+            }
+        } catch (error) {
+            return {
+                status: 500,
+                error: error?.message || JSON.stringify(error),
             }
         }
     }
@@ -44,6 +60,17 @@ module.exports = class ReadSiteService {
     async getOnePost(id) {
         try {
             return await Post.findById(id).populate('comments')
+        } catch (error) {
+            return {
+                status: 500,
+                error: error.message || JSON.stringify(error),
+            }
+        }
+    }
+
+    async getAccounts() {
+        try {
+            return await Account.find()
         } catch (error) {
             return {
                 status: 500,
