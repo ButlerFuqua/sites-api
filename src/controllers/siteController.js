@@ -5,7 +5,6 @@ const MessagingResponse = require('twilio').twiml.MessagingResponse;
 
 const writeSiteService = new WriteSiteService()
 
-
 // Received a text message
 router.post('/', async (req, res) => {
     const result = await writeSiteService.determineAction(req)
@@ -13,9 +12,9 @@ router.post('/', async (req, res) => {
         return res.status(418).json({ message: `I don't know what to do with that message.` })
 
     if (result.error)
-        return res.status(result.status).json({ error: result.error })
+        return res.status(result.status).send(result.error)
 
-
+    // respond without message in dev
     if (process.env.ENV === 'dev')
         return res.send(result)
 
@@ -26,14 +25,11 @@ router.post('/', async (req, res) => {
     else
         twiml.message(JSON.stringify(result));
 
-
     // Send message
     res.writeHead(200, { 'Content-Type': 'text/xml' });
     res.end(twiml.toString());
 
 })
-
-
 
 
 module.exports = router

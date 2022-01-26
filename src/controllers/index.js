@@ -8,5 +8,11 @@ router.get(`/`, (req, res, next) => res.status(200).json({ success: true, messag
 router.use(`/write`, require('./siteController'))
 // Read Sites
 router.use(`/read`, require('./readController'))
+// Comments
+router.use(`/comments`, require('./commentController'))
+// Subscriber
+router.use(`/subscriber`, require('./subscriberController'))
+// Newsletter
+router.use(`/newsletter`, require('./newsletterController'))
 
 module.exports = router

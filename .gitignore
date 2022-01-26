@@ -1,3 +1,7 @@
 node_modules
 
 .env
+
+src/persistence/seedData.js
+src/persistence/createCommands.js
+src/persistence/createAccounts.js

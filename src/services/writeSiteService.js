@@ -1,43 +1,52 @@
 const { uniqueNamesGenerator, starWars, colors } = require('unique-names-generator');
+const { parsePhoneNumber } = require('libphonenumber-js')
 
 const Site = require('../persistence/models/site')
 const Post = require('../persistence/models/post')
+const Command = require('../persistence/models/command')
 require('../persistence')
+const SubScriberService = require('./subscriberService')
+
+const blackListedUniques = require('./data/blackListedUniques');
+const Account = require('../persistence/models/account');
 
 module.exports = class WriteSiteService {
 
     req
     command
+    messageData
     updateSiteCommands
-    postCommands
     availableCommands
     siteUrl
     helpSiteUrl
+    subService
+    blackListedUniques
 
     constructor() {
+        this.init()
+    }
 
-        this.siteUrl = process.env.SITE_URL || 'localhost:5500'
+    async init() {
+        this.subService = new SubScriberService()
+
+        this.siteUrl = process.env.SITE_URL || 'localhost:3000'
         this.helpSiteUrl = process.env.HELP_SITE_URL || `${this.siteUrl}/help`
 
-        this.updateSiteCommands = [
-            'title',
-            'unique',
-            'owner',
-            'about',
-            'support',
-        ]
-        this.postCommands = [
-            'post',
-            'remove',
-        ]
-        this.availableCommands = [
-            ...this.updateSiteCommands,
-            'delete',
-            'death',
-            'account',
-            'help',
-            ...this.postCommands,
-        ]
+        this.blackListedUniques = blackListedUniques
+
+        await this.fetchCommands()
+    }
+
+    async fetchCommands() {
+        let allCommands
+        try {
+            allCommands = await Command.find()
+        } catch (error) {
+            return handle500Error(error)
+        }
+        this.availableCommands = allCommands.map(cmd => cmd.name)
+        this.updateSiteCommands = allCommands.filter(cmd => cmd.updateCommand).map(cmd => cmd.name)
+
     }
 
     async determineAction(req) {
@@ -52,7 +61,6 @@ module.exports = class WriteSiteService {
         if (await this.isCreateSite())
             return await this.createSite()
 
-
         // Is it a command
         this.command = this.isCommand()
         if (this.command) {
@@ -64,12 +72,18 @@ module.exports = class WriteSiteService {
                     return await this.postToSite()
                 case 'remove':
                     return await this.deletePost()
+                case 'up':
+                    return await this.signupSubscriber()
+                case 'down':
+                    return await this.signdownSubscriber()
                 case 'delete':
                     return await this.areYouSureDelete()
                 case 'death':
                     return await this.forRealDelete()
                 case 'help':
                     return this.sendHelp()
+                case 'account':
+                    return this.updateAccount()
                 default:
                     break;
             }
@@ -87,9 +101,10 @@ module.exports = class WriteSiteService {
 
     async isCreateSite() {
         // check if there is a site with the following number
+        const parsedNumber = parsePhoneNumber(this.req.body.From, 'US')
         let foundSites
         try {
-            foundSites = await Site.find({ phoneNumber: this.req.body.From })
+            foundSites = await Site.find({ phoneNumber: parsedNumber.number })
         } catch (error) {
             return handle500Error(error)
         }
@@ -104,15 +119,34 @@ module.exports = class WriteSiteService {
             length: 2
         })
 
-        const phoneNumber = this.req.body.From
+        const phoneNumber = parsePhoneNumber(this.req.body.From, 'US')
 
-        const tempFromNum = phoneNumber.substring(6)
+        const tempFromNum = phoneNumber.number.substring(6)
 
         const tempSiteName = `${randomName.trim().replace(/_/, '-').replace(/\s/g, '-')}-${tempFromNum}`
 
+        // Make sure the unique name doesn't already exist
+        let foundSites
+        try {
+            foundSites = await Site.find({ unique: tempSiteName.toLowerCase() })
+        } catch (error) {
+            return handle500Error(error)
+        }
+        // It's unlikely to happen, especially twice, so ask to make the site again.
+        if (foundSites.length > 0)
+            return `Sorry, there was a mistake creating your site. Can you send that message again?`
+
+        // Get Free account as default
+        let account
+        try {
+            account = await Account.findOne({ name: 'Free' })
+        } catch (error) {
+            return handle500Error(errror)
+        }
+
         let newSite
         try {
-            newSite = await Site.create({ phoneNumber, unique: tempSiteName.toLowerCase() })
+            newSite = await Site.create({ phoneNumber: phoneNumber.number, unique: tempSiteName.toLowerCase(), account: account._id })
         } catch (error) {
             return handle500Error(error)
         }
@@ -120,54 +154,67 @@ module.exports = class WriteSiteService {
         if (!newSite)
             return handle500Error(error)
 
-        return `Your site has been created!\nText HELP for how to update and post.\nVisit your site: ${this.siteUrl}/${newSite.unique}`
+        return `Your site has been created!\nText "help" for how to update and post.\nVisit your site: ${this.siteUrl}/${newSite.unique}`
 
     }
 
     isCommand() {
         const message = this.req.body.Body.trim().split(' ')
-        if (message[0].toLowerCase() === 'cmd') {
-            // check that the command exists and is available
-            if (message[1] && this.availableCommands.includes(message[1].toLowerCase()))
-                return message[1].toLowerCase()
-            else return {
-                error: `Command invalid or missing. Available commands:\n${this.availableCommands.join('\n')}`,
-                status: 400
-            }
+        if (this.availableCommands.includes(message[0].toLowerCase())) {
+            const command = message[0].toLowerCase()
+            this.messageData = this.req.body.Body.replace(message[0], '').trim()
+            return command
         }
-        return false
+        else return {
+            error: `Command invalid or missing. Available commands:\n${this.availableCommands.join('\n')}`,
+            status: 400
+        }
     }
 
     async updateSite() {
 
-        // get data to insert
-        const data = this.getDataToInsert()
+        if (this.command === 'unique') {
+            const unique = this.messageData.toLowerCase().replace(/-/g, '').replace(/_/g, '').replace(/\s/g, '')
+            if (this.blackListedUniques.includes(unique))
+                return `Sorry, ${this.messageData} is not available as a unique name.`
+            this.messageData = this.messageData.toLowerCase().replace(/\s/g, '-')
+        }
+
+        // parse number
+        const phoneNumber = this.req.body.From
+        const parsedNumber = parsePhoneNumber(phoneNumber, 'US')
 
         // update site
-        let site
+        let result
         try {
-            site = await Site.findOneAndUpdate({ phoneNumber: this.req.body.From }, { [this.command]: data })
+            result = await Site.findOneAndUpdate({ phoneNumber: parsedNumber.number }, { [this.command]: this.messageData })
         } catch (error) {
             return handle500Error(error)
         }
 
-        return { ...site._doc, [this.command]: data }
+        if (!result)
+            return `Sorry! Couldn't find for the number ${phoneNumber}`
+
+        return `Update made! ${this.command} = ${this.messageData}`
     }
 
     async postToSite() {
-
+        const parsedNumber = parsePhoneNumber(this.req.body.From, 'US')
         // Get site
         let site
         try {
-            site = await Site.findOne({ phoneNumber: this.req.body.From })
+            site = await Site.findOne({ phoneNumber: parsedNumber.number })
         } catch (error) {
             return handle500Error(error)
         }
+
+        if (!site)
+            return `Sorry, site not found for number ${this.req.body.From}`
 
         // Create post
         let newPost
         try {
-            newPost = await Post.create({ body: this.getDataToInsert(), site: site._id })
+            newPost = await Post.create({ body: this.messageData, site: site._id })
         } catch (error) {
             return handle500Error(error)
         }
@@ -186,13 +233,13 @@ module.exports = class WriteSiteService {
             return handle500Error(error)
         }
 
-        return `You made a new post! View at:\n${this.siteUrl}/${site.unique}/${newPost._id}`
+        return `You made a new post! View at:\n${this.siteUrl}/${site.unique}/posts/${newPost._id}`
     }
 
     async deletePost() {
 
         // Get post id
-        const postId = this.getDataToInsert()
+        const postId = this.messageData
 
         // Get and delete post
         let post
@@ -222,6 +269,36 @@ module.exports = class WriteSiteService {
 
     }
 
+    async signupSubscriber() {
+        const result = await this.subService.signup(this.req.body.From, this.messageData)
+        if (!result)
+            return `Sorry, something went wrong! Try again?`
+
+        if (typeof result === 'string')
+            return result
+
+        if (result.error)
+            return result.error
+
+
+        return `Yay! You have a new subscriber: ${result.phoneNumber}`
+    }
+
+    async signdownSubscriber() {
+        const result = await this.subService.signdown(this.req.body.From, this.messageData)
+
+        if (!result)
+            return `Sorry, something went wrong! Try again?`
+
+        if (typeof result === 'string')
+            return result
+
+        if (result.error)
+            return result.error
+
+        return `Unsubscribed: ${result.phoneNumber} ..It's okay. There are plenty of fish in the sea.`
+    }
+
     async areYouSureDelete() {
         // Get site and stage for deletion
         let site
@@ -248,9 +325,16 @@ module.exports = class WriteSiteService {
             return this.areYouSureDelete()
 
         // Check for delete confirmation
-        const confirmation = this.getDataToInsert()
+        const confirmation = this.messageData
         if (confirmation !== site.unique)
             return `Yay! You entered the command in wrong.\nTo permanently delete, send EXACTLY:\ncmd death ${site.unique}`
+
+        // Delete all posts by site
+        try {
+            await Post.deleteMany({ site: site._id })
+        } catch (error) {
+            return handle500Error(error)
+        }
 
         // delete site
         try {
@@ -262,7 +346,7 @@ module.exports = class WriteSiteService {
     }
 
     sendHelp() {
-        const data = (this.getDataToInsert()).toLowerCase()
+        const data = (this.messageData).toLowerCase()
 
         if (data === 'commands' || data === 'command' || data === 'cmd' || data === 'cmds')
             return `Commands:\n${this.availableCommands.join('\n')}`
@@ -271,8 +355,8 @@ module.exports = class WriteSiteService {
 
     }
 
-    getDataToInsert() {
-        return this.req.body.Body.replace(/cmd/i, '').replace(this.command, '').trim()
+    updateAccount() {
+        return `Visit this link to update your account: ${this.siteUrl}/account`
     }
 }
 
