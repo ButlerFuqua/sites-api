@@ -12,7 +12,9 @@ module.exports = class CommentService {
     subscriberService
     twilioClient
     fromNumber
+    sgMail
     siteUrl
+    fromEmailAddress
 
     constructor() {
         this.siteService = new SiteService()
@@ -31,6 +33,16 @@ module.exports = class CommentService {
         this.fromNumber = parsePhoneNumber(fromNumber, 'US')
 
         this.siteUrl = process.env.SITE_URL || 'localhost:3000'
+
+        this.sgMail = require('@sendgrid/mail')
+        if (process.env.SENDGRID_API_KEY)
+            this.sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+        else
+            throw new Error(`Missing sendgrid api key`)
+
+        if (!process.env.FROM_NEWSLETTER_EMAIL)
+            throw new Error(`Missing from email`)
+        this.fromEmailAddress = process.env.FROM_NEWSLETTER_EMAIL
 
     }
 
@@ -78,15 +90,24 @@ module.exports = class CommentService {
         return await Promise.all(
             sub.sites.map(async site => {
                 try {
-                    const message = `Check out recent posts from ${site.title || site.unique}!\n${this.siteUrl}/${site.unique}/posts`
+                    const html = `
+                    <h1>${site.title || site.unique} newsletter</h1>
+                    <p>Check out this week's latest posts!</p>
+                    <a href="${this.siteUrl}/${site.unique}/posts">View posts</a>
+                    <p>Copy and paste the below url if the link above doesn't work:</p>
+                    <p>${this.siteUrl}/${site.unique}/posts</p>
+                `
                     if (process.env.ENV !== 'dev') {
-                        // return await this.twilioClient.messages.create({
-                        //     body: message,
-                        //     from: this.fromNumber.number,
-                        //     to: parsedToNumber.number
-                        // })
+                        const msg = {
+                            to: sub.email, // Change to your recipient
+                            from: this.fromEmailAddress, // Change to your verified sender
+                            subject: `${site.title || site.unique} newsletter`,
+                            html,
+                        }
+                        return await this.sgMail.send(msg)
+
                     } else {
-                        return message
+                        return html
                     }
                 } catch (error) {
                     return handle500Error(error)
