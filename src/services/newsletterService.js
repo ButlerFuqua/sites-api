@@ -73,7 +73,7 @@ module.exports = class CommentService {
                     if (process.env.ENV !== 'dev') {
                         return await this.twilioClient.messages.create({
                             body: message,
-                            from: site.title || site.unique,
+                            from: this.fromNumber.number,
                             to: parsedToNumber.number
                         })
                     } else {
