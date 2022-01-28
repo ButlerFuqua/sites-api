@@ -1,19 +1,35 @@
 const express = require('express')
 const router = express.Router()
+const secretKey = process.env.SECRET_KEY
+if (!secretKey)
+    throw new Error(`No secret key`)
+const stripe = require('stripe')(secretKey)
 
 const LogService = require('../services/logService')
 const logger = new LogService()
 
+const isDev = process.env.ENV === 'dev'
+
 // Received a text message
 router.post('/subscription', async (req, res) => {
+
+    const endpointSecret = process.env.ENDPOINT_SECRET
+    if (!endpointSecret) {
+        if (!isDev)
+            logger.logError(`No endpoint secret`)
+        throw new Error(`No endpoint secret`)
+    }
+
     const sig = req.headers['stripe-signature'];
 
     let event;
 
     try {
         event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-    } catch (err) {
-        res.status(400).send(`Webhook Error: ${err.message}`);
+    } catch (error) {
+        if (!isDev)
+            await logger.logInfo(`Subscription event`, { error })
+        res.status(400).send(`Webhook Error: ${error.message}`);
         return;
     }
 
