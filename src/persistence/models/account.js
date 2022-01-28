@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const schema = new mongoose.Schema({
     name: { type: String, required: true, unique: true, },
     paid: { type: Boolean, required: true, },
+    paymentLink: { type: String },
     features: [{}]
 }, {
     timestamps: {
