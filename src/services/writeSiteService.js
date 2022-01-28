@@ -7,8 +7,8 @@ const Command = require('../persistence/models/command')
 require('../persistence')
 const SubScriberService = require('./subscriberService')
 
-const blackListedUniques = require('./data/blackListedUniques');
 const Account = require('../persistence/models/account');
+const BlackListUnique = require('../persistence/models/blacklistUnique');
 
 module.exports = class WriteSiteService {
 
@@ -32,9 +32,9 @@ module.exports = class WriteSiteService {
         this.siteUrl = process.env.SITE_URL || 'localhost:3000'
         this.helpSiteUrl = process.env.HELP_SITE_URL || `${this.siteUrl}/help`
 
-        this.blackListedUniques = blackListedUniques
 
         await this.fetchCommands()
+        await this.fetchBlacklistUniques()
     }
 
     async fetchCommands() {
@@ -46,6 +46,16 @@ module.exports = class WriteSiteService {
         }
         this.availableCommands = allCommands.map(cmd => cmd.name)
         this.updateSiteCommands = allCommands.filter(cmd => cmd.updateCommand).map(cmd => cmd.name)
+
+    }
+    async fetchBlacklistUniques() {
+        let allBlacklistUniques
+        try {
+            allBlacklistUniques = await BlackListUnique.find()
+        } catch (error) {
+            return handle500Error(error)
+        }
+        this.blackListedUniques = allBlacklistUniques.map(unique => unique.name)
 
     }
 
