@@ -28,10 +28,11 @@ router.post('/subscription', async (req, res) => {
         event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
     } catch (error) {
         if (!isDev)
-            await logger.logInfo(`Subscription event`, { error })
+            await logger.logError(event?.type || `/payments/subscription`, { error })
         res.status(400).send(`Webhook Error: ${error.message}`);
         return;
     }
+
 
     // Handle the event
     let subscriptionSchedule
@@ -69,7 +70,7 @@ router.post('/subscription', async (req, res) => {
             console.log(`Unhandled event type ${event.type}`);
     }
 
-    await logger.logInfo(`Subscription event`, { body: req.body, event, subscriptionSchedule })
+    await logger.logInfo(event?.type || `/payments/subscription`, { body: req.body, event, subscriptionSchedule })
 
     // Return a 200 res to acknowledge receipt of the event
     res.send();
