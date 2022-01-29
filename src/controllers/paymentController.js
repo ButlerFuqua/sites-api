@@ -3,6 +3,7 @@ const router = express.Router()
 const secretKey = process.env.SECRET_KEY
 if (!secretKey)
     throw new Error(`No secret key`)
+const bodyParser = require('body-parser')
 const stripe = require('stripe')(secretKey)
 
 const LogService = require('../services/logService')
@@ -11,7 +12,7 @@ const logger = new LogService()
 const isDev = process.env.ENV === 'dev'
 
 // Received a text message
-router.post('/subscription', async (req, res) => {
+router.post('/subscription', bodyParser.raw({ type: 'application/json' }), async (req, res) => {
 
     const endpointSecret = process.env.ENDPOINT_SECRET
     if (!endpointSecret) {
@@ -27,6 +28,7 @@ router.post('/subscription', async (req, res) => {
     try {
         event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
     } catch (error) {
+        console.log('error', error.message || JSON.stringify(error))
         if (!isDev)
             await logger.logError(event?.type || `/payments/subscription`, { error })
         res.status(400).send(`Webhook Error: ${error.message}`);

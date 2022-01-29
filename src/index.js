@@ -10,8 +10,8 @@ require('dotenv').config()
 app.use(cors())
 
 // Body parsing ==/
-app.use(express.urlencoded({ extended: false }))
-app.use(express.json())
+// app.use(express.urlencoded({ extended: false }))
+// app.use(express.json())
 
 // Middleware ==/
 if (process.env.ENV === 'DEV') {
