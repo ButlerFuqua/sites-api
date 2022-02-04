@@ -8,26 +8,26 @@ import {
     Route,
     SuccessResponse,
 } from "tsoa";
-import { Comment } from "../@types/comment";
-import { CommentService, CommentCreationParams } from "../services/commentService";
+import { Comment } from "../@types/data";
+import { CommentService } from "../services/commentService";
+import { CreateCommentRequest } from '../@types/requests'
 
 @Route("comments")
 export class CommentsController extends Controller {
-    @Get("{commentId}")
-    public async getComment(
-        @Path() commentId: number,
-        @Query() name?: string
-    ): Promise<Comment> {
-        return new CommentService().get(commentId, name);
+    private readonly service: CommentService;
+
+    constructor() {
+        super()
+        this.service = new CommentService();
     }
 
     @SuccessResponse("201", "Created") // Custom success response
-    @Post()
+    @Post('{postId}')
     public async createComment(
-        @Body() requestBody: CommentCreationParams
-    ): Promise<void> {
+        @Path() postId: string,
+        @Body() body: CreateCommentRequest
+    ): Promise<Comment> {
         this.setStatus(201); // set return status 201
-        new CommentService().create(requestBody);
-        return;
+        return this.service.createComment(postId, body)
     }
 }
