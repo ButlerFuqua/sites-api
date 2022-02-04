@@ -1,18 +1,17 @@
 import { Post } from '../persistence/models/post'
 import { Comment } from '../persistence/models/comment'
 import { parsePhoneNumber } from 'libphonenumber-js'
+import { Comment as CommentType } from '../@types/comment'
 require('../persistence')
 
 export class CommentService {
 
-    async createComment(postId, phoneNumber, commentBody, displayName) {
+    async createComment(postId, phoneNumber, commentBody, displayName): Promise<CommentType> {
 
         // validate phone number
         const parsedSubNumber = parsePhoneNumber(phoneNumber, 'US')
-        if (!parsedSubNumber.isValid()) return {
-            status: 400,
-            error: `Not a valid US number: ${phoneNumber}`
-        }
+        if (!parsedSubNumber.isValid())
+            throw new Error(`Not a valid US number: ${phoneNumber}`)
 
         // Find post
         let post
@@ -22,31 +21,22 @@ export class CommentService {
             handle500Error(error)
         }
         if (!post)
-            return {
-                status: 404,
-                error: `post with id: ${postId}, not found`
-            }
+            throw new Error(`post with id: ${postId}, not found`)
 
         // Validate there is a comment
         if (commentBody.trim() === '')
-            return {
-                status: 400,
-                error: `Comment body must contain content.`
-            }
+            throw new Error(`Comment body must contain content.`)
 
         // Validate there is a display name
         if (displayName.trim() === '')
-            return {
-                status: 400,
-                error: `Display Name must contain content.`
-            }
+            throw new Error(`Display Name must contain content.`)
 
         // Create comment
         let comment
         try {
             comment = await Comment.create({ phoneNumber: parsedSubNumber.number, post: post._id, body: commentBody.trim(), displayName: displayName.trim() })
-        } catch (error) {
-            return handle500Error(error)
+        } catch (error: any) {
+            throw new Error(error?.message || JSON.stringify(error))
         }
 
         // Update post ref
@@ -56,13 +46,10 @@ export class CommentService {
         try {
             await post.save()
         } catch (error) {
-            handle500Error(error)
+            throw new Error(error?.message || JSON.stringify(error))
         }
 
-        return {
-            status: 200,
-            comment,
-        }
+        return comment as CommentType
 
     }
 

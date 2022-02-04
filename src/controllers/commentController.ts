@@ -1,23 +1,36 @@
-import express from "express";
+import {
+    Body,
+    Controller,
+    // Get,
+    Path,
+    Post,
+    // Query,
+    Route,
+    SuccessResponse,
+} from "tsoa";
+
 import { CommentService } from "../services/commentService";
-const router = express.Router()
+import { Comment } from '../@types/comment'
 
-const commentService = new CommentService()
+@Route("comments")
+export class CommentsController extends Controller {
 
-// Received a text message
-router.post('/:postId', async (req, res) => {
-    const { postId } = req.params
-    const { commentBody, phoneNumber, displayName } = req.body
-    if (!commentBody || !phoneNumber || !displayName)
-        return res.status(400).json({ error: `phoneNumber, displayName, and commentBody are required.` })
+    private service: CommentService
 
-    const result = await commentService.createComment(postId, phoneNumber, commentBody, displayName)
-    if (!result)
-        return res.status(418).json({ error: `I don't know what to do with that post.` })
+    constructor() {
+        super()
+        this.service = new CommentService()
+    }
 
-    res.status(result.status).json(result)
+    @SuccessResponse("201", "Created") // Custom success response
+    @Post("{postId}")
+    public async createComment(
+        @Path() postId: string,
+        @Body() body: any
+    ): Promise<Comment> {
+        const { phoneNumber, commentBody, displayName } = body
+        this.setStatus(201);
+        return this.service.createComment(postId, phoneNumber, commentBody, displayName);
+    }
 
-})
-
-
-module.exports = router
+}
