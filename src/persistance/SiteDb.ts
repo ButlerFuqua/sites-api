@@ -10,7 +10,6 @@ export class SiteDb {
     }
 
     async init() {
-
         const DB = process.env?.DB_CONNECT
         if (!DB)
             throw new Error(`No connection to DB found.`)
