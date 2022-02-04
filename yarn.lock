@@ -14,6 +14,11 @@
   dependencies:
     "@cspotcode/source-map-consumer" "0.8.0"
 
+"@curveball/http-errors@^0.4.1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/@curveball/http-errors/-/http-errors-0.4.1.tgz#00869654267de01f04d90cb884c375bb2bb65441"
+  integrity sha512-RJe0IOQQpgvCwUY8ZKK7/YgfWi1MqMzMrIHilwXHaMFykoVjpRNzaeO3FmrKSUlmJSb6vuPd37LEPNUne4PxZA==
+
 "@sindresorhus/is@^0.14.0":
   version "0.14.0"
   resolved "https://registry.yarnpkg.com/@sindresorhus/is/-/is-0.14.0.tgz#9fb3a3cf3132328151f353de4632e01e52102bea"
