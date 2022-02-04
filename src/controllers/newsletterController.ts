@@ -1,7 +1,7 @@
-const express = require('express')
-const NewsletterService = require('../services/newsletterService')
+import express from "express";
 const router = express.Router()
 
+import { NewsletterService } from '../services/newsletterService'
 const newsletterService = new NewsletterService()
 
 // Received a text message

@@ -1,8 +1,8 @@
 import express from "express";
 const router = express.Router()
 
-import { SubScriberService } from "../services/subscriberService";
-const subscriberService = new SubScriberService()
+import { SubscriberService } from "../services/subscriberService";
+const subscriberService = new SubscriberService()
 
 // Subscribe from site
 router.post('/:siteId', async (req, res) => {
