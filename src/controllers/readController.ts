@@ -1,8 +1,9 @@
-const express = require('express')
-const ReadSiteService = require('../services/readSiteService')
+import express from "express";
 const router = express.Router()
 
+import { ReadSiteService } from "../services/readSiteService";
 const readSiteService = new ReadSiteService()
+
 
 // Index ==/
 router.get('/', async (req, res) => {

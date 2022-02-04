@@ -1,12 +1,12 @@
-const express = require('express')
+import express from "express";
 const router = express.Router()
 const secretKey = process.env.SECRET_KEY
 if (!secretKey)
     throw new Error(`No secret key`)
-const bodyParser = require('body-parser')
+import bodyParser from "body-parser";
 const stripe = require('stripe')(secretKey)
 
-const LogService = require('../services/logService')
+import { LogService } from "../services/logService";
 const logger = new LogService()
 
 const isDev = process.env.ENV === 'dev'

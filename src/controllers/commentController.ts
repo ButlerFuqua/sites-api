@@ -1,7 +1,6 @@
-const express = require('express')
-const CommentService = require('../services/commentService')
+import express from "express";
+import { CommentService } from "../services/commentService";
 const router = express.Router()
-const MessagingResponse = require('twilio').twiml.MessagingResponse;
 
 const commentService = new CommentService()
 

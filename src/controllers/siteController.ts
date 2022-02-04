@@ -1,7 +1,8 @@
-const express = require('express')
-const WriteSiteService = require('../services/writeSiteService')
+import express from "express";
 const router = express.Router()
-const MessagingResponse = require('twilio').twiml.MessagingResponse;
+import twilio from "twilio";
+const MessagingResponse = twilio.twiml.MessagingResponse;
+import { WriteSiteService } from "../services/writeSiteService";
 
 const writeSiteService = new WriteSiteService()
 
