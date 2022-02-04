@@ -8,8 +8,8 @@ import {
     Route,
     SuccessResponse,
 } from "tsoa";
-import { User } from "./user";
-import { UsersService, UserCreationParams } from "./usersService";
+import { User } from "../@types/user";
+import { UsersService, UserCreationParams } from "../services/usersService";
 
 @Route("users")
 export class UsersController extends Controller {

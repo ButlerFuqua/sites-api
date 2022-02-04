@@ -6,3 +6,6 @@ src/persistence/seedData.js
 src/persistence/createCommands.js
 src/persistence/createAccounts.js
 src/persistence/createBlacklistUniques.js
+
+build
+dist
