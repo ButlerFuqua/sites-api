@@ -1,18 +1,22 @@
 {
   "name": "personal-site-api",
   "version": "1.0.0",
-  "main": "build/src/server.js",
+  "main": "dist/src/server.js",
   "scripts": {
     "build": "tsoa spec-and-routes && tsc",
     "dev": "concurrently \"nodemon\" \"nodemon -x tsoa spec-and-routes\"",
-    "start": "node build/src/server.js"
+    "start": "node dist/src/server.js"
   },
   "repository": "https://github.com/ButlerFuqua/sites-api.git",
   "author": "ButlerFuqua <butlerfuqua@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.19.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
     "express": "^4.17.2",
+    "libphonenumber-js": "^1.9.47",
+    "mongoose": "^6.2.0",
     "tsoa": "^3.14.1"
   },
   "devDependencies": {
