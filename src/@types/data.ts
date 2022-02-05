@@ -14,6 +14,7 @@ export type Post = {
 }
 
 export type Site = {
+    _id: string,
     phoneNumber: string,
     unique: string,
     title?: string,
@@ -38,6 +39,12 @@ export type Account = {
 export type PhoneSubscriber = {
     phoneNumber: string,
     sites: Site[],
+};
+
+export type Subscriber = {
+    _id: string,
+    sites: Site[],
+    updatedAt: any,
 };
 
 export type EmailSubscriber = {
