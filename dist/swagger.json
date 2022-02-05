@@ -1,0 +1,475 @@
+{
+	"components": {
+		"examples": {},
+		"headers": {},
+		"parameters": {},
+		"requestBodies": {},
+		"responses": {},
+		"schemas": {
+			"SiteDb": {
+				"properties": {},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Comment": {
+				"properties": {
+					"post": {
+						"$ref": "#/components/schemas/Post"
+					},
+					"phoneNumber": {
+						"type": "string"
+					},
+					"body": {
+						"type": "string"
+					},
+					"displayName": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"post",
+					"phoneNumber",
+					"body"
+				],
+				"type": "object"
+			},
+			"Post": {
+				"properties": {
+					"comments": {
+						"items": {
+							"$ref": "#/components/schemas/Comment"
+						},
+						"type": "array"
+					},
+					"site": {
+						"$ref": "#/components/schemas/SiteDb"
+					},
+					"body": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"comments",
+					"site",
+					"body"
+				],
+				"type": "object"
+			},
+			"CreateCommentRequest": {
+				"properties": {
+					"displayName": {
+						"type": "string"
+					},
+					"commentBody": {
+						"type": "string"
+					},
+					"phoneNumber": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"displayName",
+					"commentBody",
+					"phoneNumber"
+				],
+				"type": "object"
+			},
+			"Boolean": {
+				"properties": {},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"Account": {
+				"properties": {
+					"features": {
+						"items": {},
+						"type": "array"
+					},
+					"paymentLink": {
+						"properties": {
+							"type": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"type"
+						],
+						"type": "object"
+					},
+					"paid": {
+						"properties": {
+							"required": {
+								"type": "boolean",
+								"enum": [
+									true
+								],
+								"nullable": false
+							},
+							"type": {
+								"$ref": "#/components/schemas/Boolean"
+							}
+						},
+						"required": [
+							"required",
+							"type"
+						],
+						"type": "object"
+					},
+					"name": {
+						"properties": {
+							"unique": {
+								"type": "boolean",
+								"enum": [
+									true
+								],
+								"nullable": false
+							},
+							"required": {
+								"type": "boolean",
+								"enum": [
+									true
+								],
+								"nullable": false
+							},
+							"type": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"unique",
+							"required",
+							"type"
+						],
+						"type": "object"
+					}
+				},
+				"required": [
+					"features",
+					"paymentLink",
+					"paid",
+					"name"
+				],
+				"type": "object"
+			},
+			"Site": {
+				"properties": {
+					"inNetwork": {
+						"type": "boolean"
+					},
+					"stagedForDeletion": {
+						"type": "boolean"
+					},
+					"emailSubscribers": {
+						"items": {
+							"$ref": "#/components/schemas/EmailSubscriber"
+						},
+						"type": "array"
+					},
+					"phoneSubscribers": {
+						"items": {
+							"$ref": "#/components/schemas/PhoneSubscriber"
+						},
+						"type": "array"
+					},
+					"posts": {
+						"items": {
+							"$ref": "#/components/schemas/Post"
+						},
+						"type": "array"
+					},
+					"account": {
+						"$ref": "#/components/schemas/Account"
+					},
+					"support": {
+						"type": "string"
+					},
+					"about": {
+						"type": "string"
+					},
+					"owner": {
+						"type": "string"
+					},
+					"title": {
+						"type": "string"
+					},
+					"unique": {
+						"type": "string"
+					},
+					"phoneNumber": {
+						"type": "string"
+					},
+					"_id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"inNetwork",
+					"stagedForDeletion",
+					"unique",
+					"phoneNumber",
+					"_id"
+				],
+				"type": "object"
+			},
+			"PhoneSubscriber": {
+				"properties": {
+					"sites": {
+						"items": {
+							"$ref": "#/components/schemas/Site"
+						},
+						"type": "array"
+					},
+					"phoneNumber": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"sites",
+					"phoneNumber"
+				],
+				"type": "object"
+			},
+			"EmailSubscriber": {
+				"properties": {
+					"sites": {
+						"items": {
+							"$ref": "#/components/schemas/Site"
+						},
+						"type": "array"
+					},
+					"email": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"sites",
+					"email"
+				],
+				"type": "object"
+			},
+			"Subscriber": {
+				"properties": {
+					"updatedAt": {},
+					"sites": {
+						"items": {
+							"$ref": "#/components/schemas/Site"
+						},
+						"type": "array"
+					},
+					"_id": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"updatedAt",
+					"sites",
+					"_id"
+				],
+				"type": "object"
+			},
+			"SignupSubscriberRequest": {
+				"properties": {
+					"email": {
+						"type": "string"
+					},
+					"phoneNumber": {
+						"type": "string"
+					}
+				},
+				"type": "object"
+			}
+		},
+		"securitySchemes": {}
+	},
+	"info": {
+		"title": "personal-site-api",
+		"version": "1.0.0",
+		"license": {
+			"name": "MIT"
+		},
+		"contact": {
+			"name": "ButlerFuqua ",
+			"email": "butlerfuqua@gmail.com"
+		}
+	},
+	"openapi": "3.0.0",
+	"paths": {
+		"/comments/{postId}": {
+			"post": {
+				"operationId": "CreateComment",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Comment"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "postId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateCommentRequest"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/newsletter": {
+			"post": {
+				"operationId": "SendAllNewsletters",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/comments": {
+			"get": {
+				"operationId": "CreateSite",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/Site"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/subscribers/{siteId}": {
+			"post": {
+				"operationId": "SignupSubscriber",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Subscriber"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "siteId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SignupSubscriberRequest"
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "SigndownSubscriber",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "siteId",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "phone",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"in": "query",
+						"name": "email",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/write": {
+			"post": {
+				"operationId": "CreateSite",
+				"responses": {
+					"200": {
+						"description": "Okay",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": []
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "/"
+		}
+	]
+}

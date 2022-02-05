@@ -8,6 +8,10 @@ const commentService = new CommentService()
 // Received a text message
 router.post('/:postId', async (req, res) => {
     const { postId } = req.params
+
+    if (!req.body)
+        return res.status(400).json({ error: `Missing body from request` })
+
     const { commentBody, phoneNumber, displayName } = req.body
     if (!commentBody || !phoneNumber || !displayName)
         return res.status(400).json({ error: `phoneNumber, displayName, and commentBody are required.` })
