@@ -12,7 +12,7 @@ import {
 import { Site } from "../@types/data";
 import { ReadSiteService } from "../services/readSiteService";
 
-@Route("comments")
+@Route("read")
 export class ReadSiteController extends Controller {
     private readonly service: ReadSiteService;
 
