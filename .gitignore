@@ -2,7 +2,10 @@ node_modules
 
 .env
 
-src/persistence/seedData.js
-src/persistence/createCommands.js
-src/persistence/createAccounts.js
-src/persistence/createBlacklistUniques.js
+src/persistance/seedData.js
+src/persistance/createCommands.js
+src/persistance/createAccounts.js
+src/persistance/createBlacklistUniques.js
+
+build
+dist

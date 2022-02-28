@@ -1,29 +1,36 @@
 {
   "name": "personal-site-api",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "main": "dist/src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "build": "tsoa spec-and-routes && tsc",
+    "dev": "concurrently \"nodemon\" \"nodemon -x tsoa spec-and-routes\"",
+    "start": "node dist/src/server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "repository": "https://github.com/ButlerFuqua/sites-api.git",
+  "author": "ButlerFuqua <butlerfuqua@gmail.com>",
+  "license": "MIT",
   "dependencies": {
+    "@curveball/http-errors": "^0.4.1",
     "@sendgrid/mail": "^7.6.0",
     "body-parser": "^1.19.1",
     "cors": "^2.8.5",
-    "dotenv": "^10.0.0",
+    "dotenv": "^16.0.0",
     "express": "^4.17.2",
-    "libphonenumber-js": "^1.9.44",
-    "mongoose": "^6.1.6",
-    "stripe": "^8.200.0",
-    "twilio": "^3.73.0",
+    "libphonenumber-js": "^1.9.47",
+    "mongoose": "^6.2.0",
+    "stripe": "^8.202.0",
+    "tsoa": "^3.14.1",
+    "twilio": "^3.73.1",
     "unique-names-generator": "^4.6.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.15"
+    "@types/body-parser": "^1.19.2",
+    "@types/express": "^4.17.13",
+    "@types/node": "^17.0.14",
+    "concurrently": "^7.0.0",
+    "nodemon": "^2.0.15",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.5"
   }
 }
